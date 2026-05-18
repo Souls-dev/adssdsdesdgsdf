@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
 
 const NAV_LINKS = [
   { label: "Home", href: "#home" },
@@ -74,14 +75,14 @@ export default function Navbar() {
             onClick={(e) => handleNavClick(e, "#home")}
             className="flex items-center gap-2"
           >
-            {/* TODO: Replace with actual logo image */}
-            <span
-              className="text-xl font-bold tracking-tight sm:text-2xl"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              <span className="text-cream-300">Al</span>
-              <span className="text-cream-100"> Jannat</span>
-            </span>
+            <Image
+              src="/logo/al-jannat-logo.png"
+              alt="Al Jannat Farmhouse Booking"
+              width={140}
+              height={48}
+              className="h-10 w-auto sm:h-12"
+              priority
+            />
           </a>
 
           {/* Desktop nav */}
