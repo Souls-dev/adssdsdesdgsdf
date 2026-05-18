@@ -62,7 +62,7 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-[#451a03]/90 backdrop-blur-lg shadow-lg"
+          ? "bg-brown-800/90 backdrop-blur-lg shadow-lg"
           : "bg-transparent"
       }`}
     >
@@ -79,8 +79,8 @@ export default function Navbar() {
               className="text-xl font-bold tracking-tight sm:text-2xl"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              <span className="text-[#fcd34d]">Al</span>
-              <span className="text-[#fef3c7]"> Jannat</span>
+              <span className="text-cream-300">Al</span>
+              <span className="text-cream-100"> Jannat</span>
             </span>
           </a>
 
@@ -93,13 +93,13 @@ export default function Navbar() {
                 onClick={(e) => handleNavClick(e, link.href)}
                 className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
                   activeSection === link.href.slice(1)
-                    ? "text-[#fcd34d]"
-                    : "text-[#fef3c7]/80 hover:text-[#fef3c7]"
+                    ? "text-cream-300"
+                    : "text-cream-100/80 hover:text-cream-100"
                 }`}
               >
                 {link.label}
                 {activeSection === link.href.slice(1) && (
-                  <span className="absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-[#fcd34d] transition-all duration-300" />
+                  <span className="absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-cream-300 transition-all duration-300" />
                 )}
               </a>
             ))}
@@ -110,7 +110,7 @@ export default function Navbar() {
             <a
               href="#contact"
               onClick={(e) => handleNavClick(e, "#contact")}
-              className="hidden rounded-full bg-[#b45309] px-5 py-2 text-sm font-semibold text-[#fef3c7] shadow-md transition-all duration-200 hover:bg-[#92400e] hover:shadow-lg active:scale-95 sm:inline-flex"
+              className="hidden rounded-full bg-amber-700 px-5 py-2 text-sm font-semibold text-cream-100 shadow-md transition-all duration-200 hover:bg-amber-800 hover:shadow-lg active:scale-95 sm:inline-flex"
             >
               Book Now
             </a>
@@ -118,7 +118,7 @@ export default function Navbar() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setIsMobileOpen(!isMobileOpen)}
-              className="inline-flex items-center justify-center rounded-lg p-2 text-[#fef3c7] transition-colors hover:bg-white/10 md:hidden"
+              className="inline-flex items-center justify-center rounded-lg p-2 text-cream-100 transition-colors hover:bg-white/10 md:hidden"
               aria-label="Toggle menu"
             >
               {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -133,7 +133,7 @@ export default function Navbar() {
           isMobileOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="border-t border-[#fef3c7]/10 bg-[#451a03]/95 backdrop-blur-lg px-4 pb-4 pt-2">
+        <div className="border-t border-cream-100/10 bg-brown-800/95 backdrop-blur-lg px-4 pb-4 pt-2">
           {NAV_LINKS.map((link, index) => (
             <a
               key={link.href}
@@ -141,8 +141,8 @@ export default function Navbar() {
               onClick={(e) => handleNavClick(e, link.href)}
               className={`block rounded-lg px-4 py-3 text-base font-medium transition-all duration-200 ${
                 activeSection === link.href.slice(1)
-                  ? "bg-[#b45309]/20 text-[#fcd34d]"
-                  : "text-[#fef3c7]/80 hover:bg-white/5 hover:text-[#fef3c7]"
+                  ? "bg-amber-700/20 text-cream-300"
+                  : "text-cream-100/80 hover:bg-white/5 hover:text-cream-100"
               }`}
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -152,7 +152,7 @@ export default function Navbar() {
           <a
             href="#contact"
             onClick={(e) => handleNavClick(e, "#contact")}
-            className="mt-2 block rounded-full bg-[#b45309] px-5 py-3 text-center text-sm font-semibold text-[#fef3c7] shadow-md transition-all duration-200 hover:bg-[#92400e]"
+            className="mt-2 block rounded-full bg-amber-700 px-5 py-3 text-center text-sm font-semibold text-cream-100 shadow-md transition-all duration-200 hover:bg-amber-800"
           >
             Book Now
           </a>

@@ -188,35 +188,34 @@ export default function ContactSection({
   };
 
   const inputBaseClass =
-    "w-full rounded-2xl border bg-white/60 px-5 py-4 text-sm text-[#451a03] placeholder-[#78350f]/40 backdrop-blur-sm transition-all duration-300 hover:bg-white/80 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#b45309]/20 focus:border-[#b45309] shadow-sm";
+    "w-full rounded-2xl border bg-white/60 px-5 py-4 text-sm text-brown-800 placeholder-amber-900/40 backdrop-blur-sm transition-all duration-300 hover:bg-white/80 focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-700/20 focus:border-amber-700 shadow-sm";
   const inputErrorClass = "border-red-400 focus:ring-red-300 focus:border-red-400";
   const inputNormalClass = "border-white/80 hover:border-white";
 
   return (
     <section
       id="contact"
-      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 pb-24"
-      style={{ backgroundColor: "#fef3c7" }}
+      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 pb-24 bg-cream-100"
     >
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-20">
-        <div className="absolute -right-60 top-0 h-96 w-96 rounded-full bg-[#b45309]/10 blur-3xl" />
-        <div className="absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-[#14532d]/10 blur-3xl" />
+        <div className="absolute -right-60 top-0 h-96 w-96 rounded-full bg-amber-700/10 blur-3xl" />
+        <div className="absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-forest-800/10 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <div className="mb-12 text-center sm:mb-16">
-          <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-[#b45309]">
+          <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-amber-700">
             Get In Touch
           </p>
           <h2
-            className="mb-4 text-3xl font-bold text-[#451a03] sm:text-4xl lg:text-5xl"
+            className="mb-4 text-3xl font-bold text-brown-800 sm:text-4xl lg:text-5xl"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             Book Your Stay
           </h2>
-          <p className="mx-auto max-w-2xl text-base text-[#78350f]/70 sm:text-lg">
+          <p className="mx-auto max-w-2xl text-base text-amber-900/70 sm:text-lg">
             Fill out the form below and our team will get back to you within 24
             hours to confirm your booking.
           </p>
@@ -231,13 +230,13 @@ export default function ContactSection({
               className="relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/40 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:p-10"
               noValidate
             >
-              <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-[#fef3c7] to-[#fde68a] opacity-30 blur-3xl pointer-events-none" />
+              <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-cream-100 to-cream-200 opacity-30 blur-3xl pointer-events-none" />
               <div className="relative z-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
                 {/* Full Name */}
                 <div>
                   <label
                     htmlFor="fullName"
-                    className="mb-1.5 block text-sm font-medium text-[#451a03]"
+                    className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
                     Full Name <span className="text-red-500">*</span>
                   </label>
@@ -262,7 +261,7 @@ export default function ContactSection({
                 <div>
                   <label
                     htmlFor="contactNumber"
-                    className="mb-1.5 block text-sm font-medium text-[#451a03]"
+                    className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
                     Contact Number <span className="text-red-500">*</span>
                   </label>
@@ -287,7 +286,7 @@ export default function ContactSection({
                 <div>
                   <label
                     htmlFor="email"
-                    className="mb-1.5 block text-sm font-medium text-[#451a03]"
+                    className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
                     Email Address <span className="text-red-500">*</span>
                   </label>
@@ -310,7 +309,7 @@ export default function ContactSection({
                 <div>
                   <label
                     htmlFor="farmhouseId"
-                    className="mb-1.5 block text-sm font-medium text-[#451a03]"
+                    className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
                     Select Farmhouse <span className="text-red-500">*</span>
                   </label>
@@ -325,8 +324,7 @@ export default function ContactSection({
                     <option value="">Select a farmhouse...</option>
                     {FARMHOUSES.map((farm) => (
                       <option key={farm.id} value={farm.id}>
-                        {farm.name} — PKR{" "}
-                        {farm.pricePerNight.toLocaleString("en-PK")}/night
+                        {farm.name} — {farm.location}
                       </option>
                     ))}
                   </select>
@@ -341,7 +339,7 @@ export default function ContactSection({
                 <div>
                   <label
                     htmlFor="checkInDate"
-                    className="mb-1.5 block text-sm font-medium text-[#451a03]"
+                    className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
                     Check-in Date <span className="text-red-500">*</span>
                   </label>
@@ -366,7 +364,7 @@ export default function ContactSection({
                 <div>
                   <label
                     htmlFor="checkOutDate"
-                    className="mb-1.5 block text-sm font-medium text-[#451a03]"
+                    className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
                     Check-out Date <span className="text-red-500">*</span>
                   </label>
@@ -391,7 +389,7 @@ export default function ContactSection({
                 <div>
                   <label
                     htmlFor="numberOfGuests"
-                    className="mb-1.5 block text-sm font-medium text-[#451a03]"
+                    className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
                     Number of Guests <span className="text-red-500">*</span>
                   </label>
@@ -417,10 +415,10 @@ export default function ContactSection({
                 <div className="sm:col-span-2">
                   <label
                     htmlFor="specialRequests"
-                    className="mb-1.5 block text-sm font-medium text-[#451a03]"
+                    className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
                     Special Requests{" "}
-                    <span className="text-[#78350f]/40">(optional)</span>
+                    <span className="text-amber-900/40">(optional)</span>
                   </label>
                   <textarea
                     id="specialRequests"
@@ -440,7 +438,7 @@ export default function ContactSection({
                     ) : (
                       <span />
                     )}
-                    <p className="text-xs text-[#78350f]/40">
+                    <p className="text-xs text-amber-900/40">
                       {formData.specialRequests.length}/500
                     </p>
                   </div>
@@ -451,7 +449,7 @@ export default function ContactSection({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative mt-8 flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-[#b45309] to-[#92400e] px-8 py-4 text-base font-bold text-[#fef3c7] shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-[#b45309]/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:shadow-xl sm:w-auto sm:min-w-[240px]"
+                className="group relative mt-8 flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-700 to-amber-800 px-8 py-4 text-base font-bold text-cream-100 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-amber-700/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:shadow-xl sm:w-auto sm:min-w-[240px]"
               >
                 <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 <span className="relative z-10 flex items-center gap-2">
@@ -476,7 +474,7 @@ export default function ContactSection({
             {/* Contact info card */}
             <div className="group rounded-[2rem] border border-white/60 bg-white/40 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:bg-white/60 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]">
               <h3
-                className="mb-6 text-xl font-bold text-[#451a03]"
+                className="mb-6 text-xl font-bold text-brown-800"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 Contact Information
@@ -485,10 +483,10 @@ export default function ContactSection({
                 <li>
                   <a
                     href="tel:02134548555"
-                    className="flex items-center gap-3 text-sm text-[#78350f]/80 transition-colors hover:text-[#b45309]"
+                    className="flex items-center gap-3 text-sm text-amber-900/80 transition-colors hover:text-amber-700"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#b45309]/10">
-                      <Phone size={18} className="text-[#b45309]" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-700/10">
+                      <Phone size={18} className="text-amber-700" />
                     </div>
                     <span>021-3454 8555</span>
                   </a>
@@ -496,20 +494,20 @@ export default function ContactSection({
                 <li>
                   <a
                     href="mailto:info@aljannatfarms.com"
-                    className="flex items-center gap-3 text-sm text-[#78350f]/80 transition-colors hover:text-[#b45309]"
+                    className="flex items-center gap-3 text-sm text-amber-900/80 transition-colors hover:text-amber-700"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#b45309]/10">
-                      <Mail size={18} className="text-[#b45309]" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-700/10">
+                      <Mail size={18} className="text-amber-700" />
                     </div>
                     <span>info@aljannatfarms.com</span>
                   </a>
                 </li>
                 <li>
                   <a
-                    href="https://wa.me/+922134548555"
+                    href="https://wa.me/+923332272020"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 text-sm text-[#78350f]/80 transition-colors hover:text-[#25D366]"
+                    className="flex items-center gap-3 text-sm text-amber-900/80 transition-colors hover:text-[#25D366]"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#25D366]/10">
                       <MessageCircle size={18} className="text-[#25D366]" />
@@ -518,9 +516,9 @@ export default function ContactSection({
                   </a>
                 </li>
                 <li>
-                  <div className="flex items-center gap-3 text-sm text-[#78350f]/80">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#b45309]/10">
-                      <MapPin size={18} className="text-[#b45309]" />
+                  <div className="flex items-center gap-3 text-sm text-amber-900/80">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-700/10">
+                      <MapPin size={18} className="text-amber-700" />
                     </div>
                     <span>Office Z-53, Near Ideal Bakery, Block 7/8, Hill Park, Karachi</span>
                   </div>
@@ -531,18 +529,18 @@ export default function ContactSection({
             {/* Operating hours */}
             <div className="group rounded-[2rem] border border-white/60 bg-white/40 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:bg-white/60 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]">
               <h3
-                className="mb-5 text-xl font-bold text-[#451a03]"
+                className="mb-5 text-xl font-bold text-brown-800"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 Operating Hours
               </h3>
-              <div className="space-y-2 text-sm text-[#78350f]/70">
+              <div className="space-y-2 text-sm text-amber-900/70">
                 <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-[#b45309]" />
+                  <Clock size={16} className="text-amber-700" />
                   <span>Monday – Saturday: 9 AM – 9 PM</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-[#b45309]" />
+                  <Clock size={16} className="text-amber-700" />
                   <span>Sunday: 10 AM – 6 PM</span>
                 </div>
               </div>

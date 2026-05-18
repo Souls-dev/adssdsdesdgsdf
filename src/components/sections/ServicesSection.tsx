@@ -73,34 +73,33 @@ export default function ServicesSection() {
   return (
     <section
       id="services"
-      className="relative overflow-hidden py-24 lg:py-32"
-      style={{ backgroundColor: "#FDFBF7" }}
+      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 bg-surface-alt"
     >
       {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-20 top-0 h-[600px] w-[600px] rounded-full bg-[#b45309]/5 blur-[120px]" />
-        <div className="absolute -right-40 bottom-20 h-[800px] w-[800px] rounded-full bg-[#14532d]/5 blur-[150px]" />
+        <div className="absolute -left-20 top-0 h-[600px] w-[600px] rounded-full bg-amber-700/5 blur-[120px]" />
+        <div className="absolute -right-40 bottom-20 h-[800px] w-[800px] rounded-full bg-forest-800/5 blur-[150px]" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <div className="mb-20 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#b45309]/20 bg-[#b45309]/5 px-5 py-2.5">
-            <Sparkles className="h-4 w-4 text-[#b45309]" />
-            <span className="text-sm font-semibold uppercase tracking-wider text-[#b45309]">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-700/20 bg-amber-700/5 px-5 py-2.5">
+            <Sparkles className="h-4 w-4 text-amber-700" />
+            <span className="text-sm font-semibold uppercase tracking-wider text-amber-700">
               What We Offer
             </span>
           </div>
           <h2
-            className="mb-6 text-4xl font-bold leading-tight text-[#291304] sm:text-5xl lg:text-6xl"
+            className="mb-6 text-4xl font-bold leading-tight text-brown-850 sm:text-5xl lg:text-6xl"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             A Complete{" "}
-            <span className="bg-gradient-to-r from-[#b45309] to-[#78350f] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-700 to-amber-900 bg-clip-text text-transparent">
               One-Roof Solution
             </span>
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-[#78350f]/70 sm:text-xl">
+          <p className="mx-auto max-w-2xl text-lg text-amber-900/70 sm:text-xl">
             With over three decades of experience, we manage everything from
             booking to facilities — delivering peace of mind every step of the
             way.
@@ -111,21 +110,21 @@ export default function ServicesSection() {
         <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Main Feature: Farmhouse Booking (Spans 2 columns) */}
           <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/40 p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:bg-white/70 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)] lg:col-span-2">
-            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-[#fef3c7] to-[#fde68a] opacity-40 blur-3xl transition-transform duration-700 group-hover:scale-150" />
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-cream-100 to-cream-200 opacity-40 blur-3xl transition-transform duration-700 group-hover:scale-150" />
 
             <div className="relative z-10 flex h-full flex-col justify-between">
               <div>
-                <div className="mb-8 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#b45309] to-[#92400e] shadow-lg transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
-                  <BookingIcon size={32} className="text-[#fef3c7]" />
+                <div className="mb-8 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-700 to-amber-800 shadow-lg transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
+                  <BookingIcon size={32} className="text-cream-100" />
                 </div>
                 <h3
-                  className="mb-4 text-3xl font-bold text-[#451a03] lg:text-4xl"
+                  className="mb-4 text-3xl font-bold text-brown-800 lg:text-4xl"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   {CORE_SERVICES[0].title}
                 </h3>
               </div>
-              <p className="mt-auto max-w-xl text-lg leading-relaxed text-[#78350f]/80">
+              <p className="mt-auto max-w-xl text-lg leading-relaxed text-amber-900/80">
                 {CORE_SERVICES[0].description}
               </p>
             </div>
@@ -134,19 +133,18 @@ export default function ServicesSection() {
           {/* Top Right Card: Event Management */}
           <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/40 p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:bg-white/70 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]">
             <div className="relative z-10 flex h-full flex-col">
-              <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#b45309]/10 transition-colors duration-500 group-hover:bg-[#b45309]">
+              <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-700/10 transition-colors duration-500 group-hover:bg-amber-700">
                 <EventIcon
                   size={26}
-                  className="text-[#b45309] transition-colors duration-500 group-hover:text-white"
+                  className="text-amber-700 transition-colors duration-500 group-hover:text-white"
                 />
-              </div>
-              <h3
-                className="mb-3 text-2xl font-bold text-[#451a03]"
+              </div>                <h3
+                  className="mb-3 text-2xl font-bold text-brown-800"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {CORE_SERVICES[4].title}
               </h3>
-              <p className="mt-auto text-base leading-relaxed text-[#78350f]/75">
+              <p className="mt-auto text-base leading-relaxed text-amber-900/75">
                 {CORE_SERVICES[4].description}
               </p>
             </div>
@@ -158,22 +156,22 @@ export default function ServicesSection() {
             return (
               <div
                 key={service.title}
-                className="group relative overflow-hidden rounded-[2rem] border border-[#b45309]/10 bg-white/60 p-8 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:bg-white hover:shadow-xl lg:col-span-1"
+                className="group relative overflow-hidden rounded-[2rem] border border-amber-700/10 bg-white/60 p-8 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:bg-white hover:shadow-xl lg:col-span-1"
               >
                 <div className="relative z-10">
-                  <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#b45309]/10 transition-colors duration-500 group-hover:bg-[#b45309]">
+                  <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-700/10 transition-colors duration-500 group-hover:bg-amber-700">
                     <Icon
                       size={26}
-                      className="text-[#b45309] transition-colors duration-500 group-hover:text-white"
+                      className="text-amber-700 transition-colors duration-500 group-hover:text-white"
                     />
                   </div>
                   <h3
-                    className="mb-3 text-xl font-bold text-[#451a03]"
+                    className="mb-3 text-xl font-bold text-brown-800"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {service.title}
                   </h3>
-                  <p className="text-base leading-relaxed text-[#78350f]/70">
+                  <p className="text-base leading-relaxed text-amber-900/70">
                     {service.description}
                   </p>
                 </div>
@@ -185,7 +183,7 @@ export default function ServicesSection() {
         {/* Luxury Amenities Section */}
         <div className="mt-20">
           <h3
-            className="mb-10 text-center text-2xl font-bold text-[#451a03] sm:text-3xl"
+            className="mb-10 text-center text-2xl font-bold text-brown-800 sm:text-3xl"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             Signature Amenities
@@ -196,17 +194,17 @@ export default function ServicesSection() {
               return (
                 <div
                   key={amenity.title}
-                  className="group flex items-center gap-5 rounded-full border border-[#14532d]/10 bg-white/60 p-4 shadow-sm backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-md"
+                  className="group flex items-center gap-5 rounded-full border border-forest-800/10 bg-white/60 p-4 shadow-sm backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-md"
                 >
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#14532d]/10 to-[#14532d]/5 transition-all duration-300 group-hover:from-[#14532d] group-hover:to-[#0f4a24] group-hover:shadow-md">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-forest-800/10 to-forest-800/5 transition-all duration-300 group-hover:from-forest-800 group-hover:to-forest-750 group-hover:shadow-md">
                     <Icon
                       size={22}
-                      className="text-[#14532d] transition-colors duration-300 group-hover:text-[#fef3c7]"
+                      className="text-forest-800 transition-colors duration-300 group-hover:text-cream-100"
                     />
                   </div>
                   <div className="pr-4">
                     <h3
-                      className="text-lg font-bold text-[#451a03]"
+                      className="text-lg font-bold text-brown-800"
                       style={{ fontFamily: "var(--font-heading)" }}
                     >
                       {amenity.title}

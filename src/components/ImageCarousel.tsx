@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 
@@ -13,6 +13,8 @@ interface ImageCarouselProps {
 export default function ImageCarousel({ images, alt, fallbackName }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleImageError = useCallback((index: number) => {
     setFailedImages((prev) => {
@@ -28,40 +30,86 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
   const totalSlides = allFailed ? 1 : images.length;
   const safeIndex = currentIndex >= totalSlides ? 0 : currentIndex;
 
-  const goTo = useCallback((index: number) => {
-    setCurrentIndex(index);
+  // ── Auto-swipe logic ──────────────────────────────────
+  const startAutoSwipe = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (allFailed || totalSlides <= 1) return;
+    intervalRef.current = setInterval(() => {
+      setCurrentIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
+    }, 2500);
+  }, [allFailed, totalSlides]);
+
+  const stopAutoSwipe = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, []);
 
-  const goPrev = useCallback(
+  // Start auto-swipe on mount; restart when totalSlides changes
+  useEffect(() => {
+    startAutoSwipe();
+    return () => {
+      stopAutoSwipe();
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [startAutoSwipe, stopAutoSwipe]);
+
+  // Helper: pause auto-swipe then resume after 5s idle
+  const pauseAndResume = useCallback(() => {
+    stopAutoSwipe();
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => startAutoSwipe(), 5000);
+  }, [stopAutoSwipe, startAutoSwipe]);
+
+  // Manual navigation resets the timer
+  const goToAndReset = useCallback(
+    (index: number) => {
+      setCurrentIndex(index);
+      pauseAndResume();
+    },
+    [pauseAndResume]
+  );
+
+  const goPrevAndReset = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       setCurrentIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
+      pauseAndResume();
     },
-    [totalSlides]
+    [totalSlides, pauseAndResume]
   );
 
-  const goNext = useCallback(
+  const goNextAndReset = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       setCurrentIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
+      pauseAndResume();
     },
-    [totalSlides]
+    [totalSlides, pauseAndResume]
   );
 
   return (
-    <div className="group/carousel relative h-52 w-full overflow-hidden sm:h-60">
+    <div
+      className="group/carousel relative h-52 w-full overflow-hidden sm:h-60"
+      onMouseEnter={stopAutoSwipe}
+      onMouseLeave={startAutoSwipe}
+    >
       {/* Branded fallback — conditionally rendered */}
       {allFailed ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#92400e] to-[#14532d]">
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-800 to-forest-800">
           <div className="text-center">
-            <Star className="mx-auto mb-2 text-[#fcd34d]" size={32} />
+            <Star className="mx-auto mb-2 text-cream-300" size={32} />
             <p
-              className="text-lg font-semibold text-[#fef3c7]"
+              className="text-lg font-semibold text-cream-100"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               {fallbackName}
             </p>
-            <p className="mt-1 text-xs text-[#fef3c7]/60">
+            <p className="mt-1 text-xs text-cream-100/60">
               Photo coming soon
             </p>
           </div>
@@ -95,15 +143,15 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
       {!allFailed && totalSlides > 1 && (
         <>
           <button
-            onClick={goPrev}
-            className="absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#451a03] shadow-md opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 group-hover/carousel:opacity-100"
+            onClick={goPrevAndReset}
+            className="absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brown-800 shadow-md opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 group-hover/carousel:opacity-100"
             aria-label="Previous photo"
           >
             <ChevronLeft size={18} />
           </button>
           <button
-            onClick={goNext}
-            className="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#451a03] shadow-md opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 group-hover/carousel:opacity-100"
+            onClick={goNextAndReset}
+            className="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brown-800 shadow-md opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 group-hover/carousel:opacity-100"
             aria-label="Next photo"
           >
             <ChevronRight size={18} />
@@ -119,7 +167,7 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
               key={index}
               onClick={(e) => {
                 e.stopPropagation();
-                goTo(index);
+                goToAndReset(index);
               }}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 index === safeIndex

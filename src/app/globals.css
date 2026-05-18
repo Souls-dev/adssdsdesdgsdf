@@ -7,18 +7,23 @@
   --color-cream-200: #fde68a;
   --color-cream-300: #fcd34d;
 
+  --color-amber-500: #f59e0b;
   --color-amber-600: #d97706;
   --color-amber-700: #b45309;
   --color-amber-800: #92400e;
   --color-amber-900: #78350f;
 
   --color-brown-800: #451a03;
+  --color-brown-850: #291304;
   --color-brown-900: #321204;
+  --color-brown-950: #1a0a03;
 
   --color-forest-600: #166534;
   --color-forest-700: #15803d;
+  --color-forest-750: #0f4a24;
   --color-forest-800: #14532d;
   --color-forest-900: #0f3d21;
+  --color-forest-950: #0a1a03;
 
   /* ── Semantic ── */
   --color-primary: #b45309;
@@ -27,6 +32,7 @@
 
   --color-surface: #fffbeb;
   --color-surface-warm: #fef3c7;
+  --color-surface-alt: #FDFBF7;
 
   --color-text-primary: #451a03;
   --color-text-secondary: #78350f;
