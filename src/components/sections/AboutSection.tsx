@@ -1,13 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { Award, Heart, Home, Handshake, ShieldCheck, Sparkles, Clock, Star } from "lucide-react";
+import { Award, Heart, Home, Handshake, ShieldCheck, Sparkles, Clock } from "lucide-react";
 
 const STATS = [
   { value: "32+", label: "Years of Legacy", icon: Award },
   { value: "10,000+", label: "Happy Customers", icon: Heart },
   { value: "40+", label: "Premium Farmhouses", icon: Home },
-  { value: "100%", label: "Satisfaction Guarantee", icon: Star },
   { value: "24/7", label: "Dedicated Support", icon: Clock },
 ];
 
@@ -173,7 +172,7 @@ export default function AboutSection() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5 sm:gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
           {STATS.map((stat) => {
             const Icon = stat.icon;
             return (
