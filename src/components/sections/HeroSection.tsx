@@ -69,14 +69,14 @@ export default function HeroSection({ theme }: HeroSectionProps) {
         <section
           id="home"
           ref={heroRef}
-          className="relative flex min-h-screen items-center justify-center overflow-hidden bg-brown-950"
+          className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-brown-950"
         >
           {/* Video Placeholder */}
           <div className="absolute inset-0 z-0 h-full w-full">
             <div className="relative h-full w-full bg-gradient-to-br from-brown-950 via-brown-900 to-forest-950">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(252,211,77,0.03),transparent_70%)]" />
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-2xl transition-all duration-300 hover:bg-white/20 hover:scale-110">
+                <div className="mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-2xl">
                   <Play size={40} className="text-white/60 ml-1" />
                 </div>
                 <p className="text-sm font-medium uppercase tracking-[0.3em] text-white/40">
@@ -92,12 +92,6 @@ export default function HeroSection({ theme }: HeroSectionProps) {
             </div>
             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-brown-950/95" />
             <div className="absolute inset-0 bg-gradient-to-r from-brown-800/40 to-transparent" />
-          </div>
-
-          {/* Decorative Orbs */}
-          <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
-            <div className="absolute -top-40 right-10 h-96 w-96 rounded-full bg-cream-300 blur-[120px]" />
-            <div className="absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-amber-700 blur-[100px]" />
           </div>
 
           {/* Content */}
@@ -160,7 +154,7 @@ export default function HeroSection({ theme }: HeroSectionProps) {
         <section
           id="home"
           ref={heroRef}
-          className="relative flex min-h-screen items-center justify-center overflow-hidden bg-brown-950"
+          className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-brown-950"
         >
           {/* Sliding Background Images */}
           <div className="absolute inset-0 z-0">
@@ -285,7 +279,7 @@ function HeroContent() {
 // ── Shared Stats Banner (Desktop) ────────────────────────────
 function StatsBanner() {
   return (
-    <div className="hero-animate absolute bottom-12 left-1/2 hidden -translate-x-1/2 md:block opacity-0 z-20">
+    <div className="hero-animate relative z-20 mb-8 hidden md:block opacity-0">
       <div className="flex items-center gap-6 rounded-full border border-white/10 bg-black/40 px-8 py-3 backdrop-blur-xl shadow-2xl">
         <div className="text-center">
           <p className="text-xl font-bold text-cream-300">10,000+</p>
@@ -315,10 +309,10 @@ function StatsBanner() {
 // ── Shared Scroll Indicator (Mobile) ─────────────────────────
 function ScrollIndicator() {
   return (
-    <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2 md:hidden">
+    <div className="relative z-20 mb-6 md:hidden">
       <a
         href="#packages"
-        className="flex flex-col items-center gap-2 text-white/50 transition-colors duration-300 hover:text-cream-300"
+        className="flex flex-col items-center gap-2 text-white/50 transition-colors duration-200 hover:text-cream-300"
         aria-label="Scroll down"
       >
         <ChevronDown size={24} className="animate-bounce-gentle" />

@@ -58,7 +58,7 @@ export default function PackagesSection({
           {FARMHOUSES.map((farm) => (
             <div
               key={farm.id}
-              className="group overflow-hidden rounded-2xl border border-amber-800/10 bg-white shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1"
+              className="group overflow-hidden rounded-2xl border border-amber-800/10 bg-white shadow-sm transition-shadow duration-200 hover:shadow-lg"
             >
               {/* Image carousel */}
               <div className="relative">

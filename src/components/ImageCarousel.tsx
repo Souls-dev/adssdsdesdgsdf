@@ -62,7 +62,7 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
   const pauseAndResume = useCallback(() => {
     stopAutoSwipe();
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => startAutoSwipe(), 5000);
+    timeoutRef.current = setTimeout(() => startAutoSwipe(), 3000);
   }, [stopAutoSwipe, startAutoSwipe]);
 
   // Manual navigation resets the timer
@@ -122,7 +122,7 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
       {images.map((src, index) => (
         <div
           key={src}
-          className="absolute inset-0 transition-opacity duration-500 ease-in-out"
+          className="absolute inset-0 transition-opacity duration-300 ease-in-out"
           style={{
             opacity: index === safeIndex && !failedImages.has(index) ? 1 : 0,
             pointerEvents: index === safeIndex ? "auto" : "none",

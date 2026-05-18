@@ -77,8 +77,7 @@ export default function ServicesSection() {
     >
       {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-20 top-0 h-[600px] w-[600px] rounded-full bg-amber-700/5 blur-[120px]" />
-        <div className="absolute -right-40 bottom-20 h-[800px] w-[800px] rounded-full bg-forest-800/5 blur-[150px]" />
+        <div className="absolute -left-20 top-0 h-[600px] w-[600px] rounded-full bg-amber-700/5 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -109,8 +108,8 @@ export default function ServicesSection() {
         {/* Bento Grid for Core Services */}
         <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Main Feature: Farmhouse Booking (Spans 2 columns) */}
-          <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/40 p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:bg-white/70 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)] lg:col-span-2">
-            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-cream-100 to-cream-200 opacity-40 blur-3xl transition-transform duration-700 group-hover:scale-150" />
+          <div className="group relative overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-10 shadow-sm backdrop-blur-xl transition-shadow duration-200 hover:shadow-lg lg:col-span-2">
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-cream-100 to-cream-200 opacity-40 blur-3xl" />
 
             <div className="relative z-10 flex h-full flex-col justify-between">
               <div>
@@ -131,7 +130,7 @@ export default function ServicesSection() {
           </div>
 
           {/* Top Right Card: Event Management */}
-          <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/40 p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:bg-white/70 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]">
+          <div className="group relative overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-10 shadow-sm backdrop-blur-xl transition-shadow duration-200 hover:shadow-lg">
             <div className="relative z-10 flex h-full flex-col">
               <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-700/10 transition-colors duration-500 group-hover:bg-amber-700">
                 <EventIcon
@@ -156,7 +155,7 @@ export default function ServicesSection() {
             return (
               <div
                 key={service.title}
-                className="group relative overflow-hidden rounded-[2rem] border border-amber-700/10 bg-white/60 p-8 shadow-sm backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:bg-white hover:shadow-xl lg:col-span-1"
+                className="group relative overflow-hidden rounded-2xl border border-amber-700/10 bg-white/60 p-8 shadow-sm backdrop-blur-md transition-shadow duration-200 hover:shadow-lg lg:col-span-1"
               >
                 <div className="relative z-10">
                   <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-700/10 transition-colors duration-500 group-hover:bg-amber-700">
@@ -194,7 +193,7 @@ export default function ServicesSection() {
               return (
                 <div
                   key={amenity.title}
-                  className="group flex items-center gap-5 rounded-full border border-forest-800/10 bg-white/60 p-4 shadow-sm backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-white hover:shadow-md"
+                  className="group flex items-center gap-5 rounded-full border border-forest-800/10 bg-white/60 p-4 shadow-sm backdrop-blur-md transition-shadow duration-200 hover:shadow-md"
                 >
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-forest-800/10 to-forest-800/5 transition-all duration-300 group-hover:from-forest-800 group-hover:to-forest-750 group-hover:shadow-md">
                     <Icon

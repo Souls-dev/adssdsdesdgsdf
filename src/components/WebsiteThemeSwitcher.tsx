@@ -7,7 +7,7 @@ import { Palette, Paintbrush } from "lucide-react";
 export type HeroTheme = "theme1" | "theme2" | "theme3";
 
 // ── Website color themes ─────────────────────────────────────
-export type ColorTheme = "gold" | "green" | "red" | "blue" | "yellow";
+export type ColorTheme = "gold" | "green" | "red" | "blue" | "yellow" | "logo";
 
 type ColorOverrides = Record<string, string>;
 
@@ -156,6 +156,40 @@ const COLOR_THEMES: Record<
       "--color-text-light": "#fef9c3",
     },
   },
+  logo: {
+    label: "Logo",
+    preview: "from-green-500 via-yellow-400 to-blue-500",
+    overrides: {
+      "--color-cream-50": "#f0fdf4",
+      "--color-cream-100": "#dcfce7",
+      "--color-cream-200": "#bbf7d0",
+      "--color-cream-300": "#fde047",
+      "--color-amber-500": "#eab308",
+      "--color-amber-600": "#ca8a04",
+      "--color-amber-700": "#16a34a",
+      "--color-amber-800": "#15803d",
+      "--color-amber-900": "#166534",
+      "--color-brown-800": "#14274e",
+      "--color-brown-850": "#0f1f3d",
+      "--color-brown-900": "#0b1929",
+      "--color-brown-950": "#06101a",
+      "--color-forest-600": "#16a34a",
+      "--color-forest-700": "#15803d",
+      "--color-forest-750": "#166534",
+      "--color-forest-800": "#14532d",
+      "--color-forest-900": "#1e3a5f",
+      "--color-forest-950": "#0b1929",
+      "--color-primary": "#16a34a",
+      "--color-primary-hover": "#15803d",
+      "--color-primary-light": "#dcfce7",
+      "--color-surface": "#f0fdf4",
+      "--color-surface-warm": "#dcfce7",
+      "--color-surface-alt": "#f5fef8",
+      "--color-text-primary": "#14274e",
+      "--color-text-secondary": "#166534",
+      "--color-text-light": "#dcfce7",
+    },
+  },
 };
 
 // ── Default CSS values (gold theme) to restore on reset ──────
@@ -254,7 +288,7 @@ export default function WebsiteThemeSwitcher({
       <div className="mb-1 text-white/50">
         <Paintbrush size={14} />
       </div>
-      {(["gold", "green", "red", "blue", "yellow"] as const).map((t, i) => (
+      {(["gold", "green", "red", "blue", "yellow", "logo"] as const).map((t, i) => (
         <button
           key={t}
           onClick={() => onColorThemeChange(t)}
@@ -273,7 +307,9 @@ export default function WebsiteThemeSwitcher({
                 ? "linear-gradient(135deg, #f43f5e, #9f1239)"
                 : t === "blue"
                 ? "linear-gradient(135deg, #3b82f6, #1e40af)"
-                : "linear-gradient(135deg, #eab308, #a16207)",
+                : t === "yellow"
+                ? "linear-gradient(135deg, #eab308, #a16207)"
+                : "linear-gradient(135deg, #16a34a, #eab308, #2563eb)",
           }}
           title={`Color Theme: ${COLOR_THEMES[t].label}`}
         >

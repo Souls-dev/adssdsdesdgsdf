@@ -78,9 +78,9 @@ export default function Navbar() {
             <Image
               src="/logo/al-jannat-logo.png"
               alt="Al Jannat Farmhouse Booking"
-              width={140}
-              height={48}
-              className="h-10 w-auto sm:h-12"
+              width={180}
+              height={60}
+              className="h-12 w-auto sm:h-14 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
               priority
             />
           </a>

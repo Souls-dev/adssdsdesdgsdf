@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { FARMHOUSES } from "@/data/farmhouses";
 import toast from "react-hot-toast";
 import {
@@ -28,6 +28,20 @@ const SLOT_OPTIONS = [
   { value: "Overnight", label: "Overnight" },
 ];
 
+// ── Security: Sanitize input to strip HTML/script tags ────────
+function sanitize(str: string): string {
+  return str
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
+}
+
+// ── Security: Client-side rate limiter ────────────────────────
+const SUBMIT_COOLDOWN_MS = 30_000; // 30 seconds between submissions
+const MAX_SUBMITS_PER_SESSION = 5;
+
 export default function ContactSection({
   selectedFarmhouse,
   onFarmhouseChange,
@@ -43,6 +57,11 @@ export default function ContactSection({
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Security state
+  const [honeypot, setHoneypot] = useState(""); // bot trap
+  const lastSubmitTime = useRef(0);
+  const submitCount = useRef(0);
 
   // Pre-select farmhouse from Packages section
   useEffect(() => {
@@ -85,6 +104,7 @@ export default function ContactSection({
         case "budget":
           if (!value || value.trim().length === 0)
             return "Please enter your budget";
+          if (value.trim().length > 50) return "Budget too long";
           return "";
         case "query":
           if (value.length > 1000) return "Maximum 1000 characters";
@@ -138,18 +158,46 @@ export default function ContactSection({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ── Security checks ──────────────────────────────────────
+    // Honeypot — bots fill hidden fields
+    if (honeypot) {
+      toast.success(
+        "Booking inquiry received! We will contact you within 24 hours."
+      );
+      return; // Silent reject for bots
+    }
+
+    // Rate limit — 30s cooldown
+    const now = Date.now();
+    if (now - lastSubmitTime.current < SUBMIT_COOLDOWN_MS) {
+      const remaining = Math.ceil(
+        (SUBMIT_COOLDOWN_MS - (now - lastSubmitTime.current)) / 1000
+      );
+      toast.error(`Please wait ${remaining}s before submitting again.`);
+      return;
+    }
+
+    // Max submissions per session
+    if (submitCount.current >= MAX_SUBMITS_PER_SESSION) {
+      toast.error(
+        "Maximum inquiries reached. Please contact us on WhatsApp for additional requests."
+      );
+      return;
+    }
+
     if (!validateAll() || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       const payload = {
-        name: formData.name.trim(),
+        name: sanitize(formData.name.trim()),
         number: formData.number.replace(/[-\s]/g, ""),
         farmhouseName: formData.farmhouseName,
         eventDate: formData.eventDate,
         slots: formData.slots,
-        budget: formData.budget.trim(),
-        query: formData.query.trim(),
+        budget: sanitize(formData.budget.trim()),
+        query: sanitize(formData.query.trim()),
       };
 
       const res = await fetch(
@@ -162,6 +210,8 @@ export default function ContactSection({
       );
 
       if (res.ok) {
+        lastSubmitTime.current = Date.now();
+        submitCount.current++;
         toast.success(
           "Booking inquiry received! We will contact you within 24 hours."
         );
@@ -193,7 +243,7 @@ export default function ContactSection({
   };
 
   const inputBaseClass =
-    "w-full rounded-2xl border bg-white/60 px-5 py-4 text-sm text-brown-800 placeholder-amber-900/40 backdrop-blur-sm transition-all duration-300 hover:bg-white/80 focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-700/20 focus:border-amber-700 shadow-sm";
+    "w-full rounded-xl border bg-white/60 px-4 py-3 text-sm text-brown-800 placeholder-amber-900/40 backdrop-blur-sm transition-colors duration-200 hover:bg-white/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-700/20 focus:border-amber-700 shadow-sm";
   const inputErrorClass =
     "border-red-400 focus:ring-red-300 focus:border-red-400";
   const inputNormalClass = "border-white/80 hover:border-white";
@@ -201,10 +251,10 @@ export default function ContactSection({
   return (
     <section
       id="contact"
-      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 pb-24 bg-cream-100"
+      className="relative overflow-hidden py-16 sm:py-20 lg:py-24 bg-cream-100"
     >
       {/* Background decoration */}
-      <div className="absolute inset-0 opacity-20">
+      <div className="pointer-events-none absolute inset-0 opacity-20">
         <div className="absolute -right-60 top-0 h-96 w-96 rounded-full bg-amber-700/10 blur-3xl" />
         <div className="absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-forest-800/10 blur-3xl" />
       </div>
@@ -233,11 +283,25 @@ export default function ContactSection({
           <div className="lg:col-span-2">
             <form
               onSubmit={handleSubmit}
-              className="relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/40 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:p-10"
+              className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:p-8"
               noValidate
             >
-              <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-cream-100 to-cream-200 opacity-30 blur-3xl pointer-events-none" />
-              <div className="relative z-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="relative z-10 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {/* Honeypot — invisible to humans, bots fill it */}
+                <div
+                  aria-hidden="true"
+                  className="absolute -left-[9999px] -top-[9999px]"
+                >
+                  <input
+                    type="text"
+                    name="website_url"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </div>
+
                 {/* Name */}
                 <div>
                   <label
@@ -254,6 +318,7 @@ export default function ContactSection({
                     onChange={handleChange}
                     onBlur={handleBlur}
                     placeholder="Your full name"
+                    maxLength={100}
                     className={`${inputBaseClass} ${errors.name ? inputErrorClass : inputNormalClass}`}
                   />
                   {errors.name && (
@@ -277,6 +342,7 @@ export default function ContactSection({
                     onChange={handleChange}
                     onBlur={handleBlur}
                     placeholder="03XX-XXXXXXX"
+                    maxLength={15}
                     className={`${inputBaseClass} ${errors.number ? inputErrorClass : inputNormalClass}`}
                   />
                   {errors.number && (
@@ -386,6 +452,7 @@ export default function ContactSection({
                     onChange={handleChange}
                     onBlur={handleBlur}
                     placeholder="e.g. 50,000 PKR"
+                    maxLength={50}
                     className={`${inputBaseClass} ${errors.budget ? inputErrorClass : inputNormalClass}`}
                   />
                   {errors.budget && (
@@ -411,6 +478,7 @@ export default function ContactSection({
                     onChange={handleChange}
                     onBlur={handleBlur}
                     rows={3}
+                    maxLength={1000}
                     placeholder="Any questions or special requirements..."
                     className={`${inputBaseClass} resize-none ${errors.query ? inputErrorClass : inputNormalClass}`}
                   />
@@ -431,9 +499,9 @@ export default function ContactSection({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative mt-8 flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-amber-700 to-amber-800 px-8 py-4 text-base font-bold text-cream-100 shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-amber-700/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:shadow-xl sm:w-auto sm:min-w-[240px]"
+                className="group relative mt-6 flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 px-8 py-3.5 text-base font-bold text-cream-100 shadow-lg transition-all duration-200 hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[240px]"
               >
-                <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
                 <span className="relative z-10 flex items-center gap-2">
                   {isSubmitting ? (
                     <>
@@ -442,10 +510,7 @@ export default function ContactSection({
                     </>
                   ) : (
                     <>
-                      <Send
-                        size={20}
-                        className="transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1"
-                      />
+                      <Send size={20} />
                       Submit Booking Inquiry
                     </>
                   )}
@@ -457,9 +522,9 @@ export default function ContactSection({
           {/* Sidebar — 1 column */}
           <div className="space-y-6">
             {/* Contact info card */}
-            <div className="group rounded-[2rem] border border-white/60 bg-white/40 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:bg-white/60 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]">
+            <div className="rounded-3xl border border-white/60 bg-white/40 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:p-8">
               <h3
-                className="mb-6 text-xl font-bold text-brown-800"
+                className="mb-5 text-xl font-bold text-brown-800"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 Contact Information
@@ -515,9 +580,9 @@ export default function ContactSection({
             </div>
 
             {/* Operating hours */}
-            <div className="group rounded-[2rem] border border-white/60 bg-white/40 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:bg-white/60 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]">
+            <div className="rounded-3xl border border-white/60 bg-white/40 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:p-8">
               <h3
-                className="mb-5 text-xl font-bold text-brown-800"
+                className="mb-4 text-xl font-bold text-brown-800"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 Operating Hours
@@ -535,12 +600,12 @@ export default function ContactSection({
             </div>
 
             {/* Map embed */}
-            <div className="group relative h-64 overflow-hidden rounded-[2rem] border border-white/60 bg-white/40 p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]">
+            <div className="relative h-64 overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl">
               <iframe
                 src="https://maps.google.com/maps?q=Al+Jannat+farmhouse+booking&t=&z=14&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
-                className="rounded-[1.5rem]"
+                className="rounded-2xl"
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"

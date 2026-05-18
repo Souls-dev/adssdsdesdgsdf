@@ -175,3 +175,20 @@ h6 {
 .animate-delay-300 { animation-delay: 300ms; }
 .animate-delay-400 { animation-delay: 400ms; }
 .animate-delay-500 { animation-delay: 500ms; }
+
+/* ── Accessibility: reduce motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Performance: GPU acceleration for fixed elements ── */
+.fixed {
+  will-change: transform;
+}
