@@ -7,7 +7,7 @@ import { Pipette, X, RotateCcw, Copy, Check } from "lucide-react";
 // Organized by visual category for the agency to easily find what to change
 const COLOR_GROUPS = [
   {
-    label: "🎨 Brand / Accent Colors",
+    label: "Brand / Accent Colors",
     description: "Main buttons, links, highlights",
     vars: [
       { key: "--color-primary", label: "Primary" },
@@ -16,7 +16,7 @@ const COLOR_GROUPS = [
     ],
   },
   {
-    label: "🖼️ Page Backgrounds",
+    label: "Page Backgrounds",
     description: "Section backgrounds & surfaces",
     vars: [
       { key: "--color-surface", label: "Main Background" },
@@ -29,7 +29,7 @@ const COLOR_GROUPS = [
     ],
   },
   {
-    label: "✏️ Text Colors",
+    label: "Text Colors",
     description: "Headings, body text, light text",
     vars: [
       { key: "--color-text-primary", label: "Heading Text" },
@@ -38,7 +38,7 @@ const COLOR_GROUPS = [
     ],
   },
   {
-    label: "🟠 Amber / Gold Tones",
+    label: "Amber / Gold Tones",
     description: "Buttons, tags, accents, icons",
     vars: [
       { key: "--color-amber-500", label: "Amber 500 (bright)" },
@@ -49,7 +49,7 @@ const COLOR_GROUPS = [
     ],
   },
   {
-    label: "🟤 Dark Tones (Navbar, Footer, Hero)",
+    label: "Dark Tones (Navbar, Footer, Hero)",
     description: "Navbar, footer, hero overlays",
     vars: [
       { key: "--color-brown-800", label: "Brown 800 (navbar)" },
@@ -59,7 +59,7 @@ const COLOR_GROUPS = [
     ],
   },
   {
-    label: "🌲 Green / Forest Tones",
+    label: "Green / Forest Tones",
     description: "Green accents, gradients, highlights",
     vars: [
       { key: "--color-forest-600", label: "Forest 600" },
@@ -200,10 +200,10 @@ export default function ThemeCustomizer() {
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div>
             <h3 className="text-sm font-bold tracking-wide">
-              🎨 Color Customizer
+              Color Customizer
             </h3>
             <p className="mt-0.5 text-[10px] text-white/40">
-              Change any color → Copy palette → Send to dev
+              Change any color → Copy palette
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -307,7 +307,7 @@ export default function ThemeCustomizer() {
             )}
           </button>
           <p className="mt-2 text-center text-[9px] text-white/30">
-            Copy &amp; send to your developer to apply permanently
+            Copy to apply permanently
           </p>
         </div>
       </div>
