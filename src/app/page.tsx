@@ -4,6 +4,8 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFAB from "@/components/WhatsAppFAB";
+import WebsiteThemeSwitcher from "@/components/WebsiteThemeSwitcher";
+import type { HeroTheme, ColorTheme } from "@/components/WebsiteThemeSwitcher";
 import HeroSection from "@/components/sections/HeroSection";
 import PackagesSection from "@/components/sections/PackagesSection";
 import ServicesSection from "@/components/sections/ServicesSection";
@@ -12,6 +14,8 @@ import ContactSection from "@/components/sections/ContactSection";
 
 export default function Home() {
   const [selectedFarmhouse, setSelectedFarmhouse] = useState("");
+  const [heroTheme, setHeroTheme] = useState<HeroTheme>("theme1");
+  const [colorTheme, setColorTheme] = useState<ColorTheme>("gold");
 
   const handleBookFarmhouse = (farmhouseId: string) => {
     setSelectedFarmhouse(farmhouseId);
@@ -25,7 +29,7 @@ export default function Home() {
     <>
       <Navbar />
       <main>
-        <HeroSection />
+        <HeroSection theme={heroTheme} />
         <PackagesSection onBookFarmhouse={handleBookFarmhouse} />
         <ServicesSection />
         <AboutSection />
@@ -36,6 +40,12 @@ export default function Home() {
       </main>
       <Footer />
       <WhatsAppFAB />
+      <WebsiteThemeSwitcher
+        heroTheme={heroTheme}
+        onHeroThemeChange={setHeroTheme}
+        colorTheme={colorTheme}
+        onColorThemeChange={setColorTheme}
+      />
     </>
   );
 }

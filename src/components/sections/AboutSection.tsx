@@ -26,7 +26,7 @@ const VALUES = [
   },
   {
     icon: Sparkles,
-    title: "Khidmat Ka Jazba",
+    title: "Spirit of Service",
     description:
       "Service is at the core of our business. Our caretakers and support staff are trained to be helpful and respectful, making sure your events run smoothly without unnecessary interruptions.",
   },

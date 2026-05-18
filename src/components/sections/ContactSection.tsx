@@ -20,19 +20,26 @@ interface ContactSectionProps {
 
 type FormErrors = Record<string, string>;
 
+const SLOT_OPTIONS = [
+  { value: "", label: "Select a slot..." },
+  { value: "Morning", label: "Morning" },
+  { value: "Evening", label: "Evening" },
+  { value: "Full Day", label: "Full Day" },
+  { value: "Overnight", label: "Overnight" },
+];
+
 export default function ContactSection({
   selectedFarmhouse,
   onFarmhouseChange,
 }: ContactSectionProps) {
   const [formData, setFormData] = useState({
-    fullName: "",
-    contactNumber: "",
-    email: "",
-    farmhouseId: "",
-    checkInDate: "",
-    checkOutDate: "",
-    numberOfGuests: 1,
-    specialRequests: "",
+    name: "",
+    number: "",
+    farmhouseName: "",
+    eventDate: "",
+    slots: "",
+    budget: "",
+    query: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,65 +47,53 @@ export default function ContactSection({
   // Pre-select farmhouse from Packages section
   useEffect(() => {
     if (selectedFarmhouse) {
-      setFormData((prev) => ({ ...prev, farmhouseId: selectedFarmhouse }));
+      const farm = FARMHOUSES.find((f) => f.id === selectedFarmhouse);
+      if (farm) {
+        setFormData((prev) => ({ ...prev, farmhouseName: farm.name }));
+      }
     }
   }, [selectedFarmhouse]);
 
   const today = new Date().toISOString().split("T")[0];
 
-  const minCheckOut = formData.checkInDate
-    ? new Date(new Date(formData.checkInDate).getTime() + 86400000)
-        .toISOString()
-        .split("T")[0]
-    : today;
-
   const validateField = useCallback(
-    (name: string, value: string | number): string => {
+    (name: string, value: string): string => {
       switch (name) {
-        case "fullName":
-          if (!value || String(value).trim().length < 2)
+        case "name":
+          if (!value || value.trim().length < 2)
             return "Name must be at least 2 characters";
-          if (String(value).trim().length > 100)
+          if (value.trim().length > 100)
             return "Name must be at most 100 characters";
           return "";
-        case "contactNumber": {
-          const phone = String(value).replace(/[-\s]/g, "");
+        case "number": {
+          const phone = value.replace(/[-\s]/g, "");
           if (!/^(\+92|0)[0-9]{10}$/.test(phone))
-            return "Enter a valid Pakistani number (03XX-XXXXXXX or +92XXXXXXXXXX)";
+            return "Enter a valid Pakistani number (03XX-XXXXXXX)";
           return "";
         }
-        case "email":
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value)))
-            return "Enter a valid email address";
-          return "";
-        case "farmhouseId":
+        case "farmhouseName":
           if (!value) return "Please select a farmhouse";
           return "";
-        case "checkInDate":
-          if (!value) return "Select a check-in date";
-          if (new Date(String(value)) < new Date(today))
-            return "Check-in must be today or later";
+        case "eventDate":
+          if (!value) return "Select an event date";
+          if (new Date(value) < new Date(today))
+            return "Event date must be today or later";
           return "";
-        case "checkOutDate":
-          if (!value) return "Select a check-out date";
-          if (
-            formData.checkInDate &&
-            new Date(String(value)) <= new Date(formData.checkInDate)
-          )
-            return "Check-out must be after check-in";
+        case "slots":
+          if (!value) return "Please select a slot";
           return "";
-        case "numberOfGuests":
-          if (!value || Number(value) < 1) return "At least 1 guest required";
-          if (Number(value) > 50) return "Maximum 50 guests";
+        case "budget":
+          if (!value || value.trim().length === 0)
+            return "Please enter your budget";
           return "";
-        case "specialRequests":
-          if (String(value).length > 500) return "Maximum 500 characters";
+        case "query":
+          if (value.length > 1000) return "Maximum 1000 characters";
           return "";
         default:
           return "";
       }
     },
-    [formData.checkInDate, today]
+    [today]
   );
 
   const handleChange = (
@@ -107,17 +102,16 @@ export default function ContactSection({
     >
   ) => {
     const { name, value } = e.target;
-    const newValue =
-      name === "numberOfGuests" ? parseInt(value, 10) || 0 : value;
-    setFormData((prev) => ({ ...prev, [name]: newValue }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    if (name === "farmhouseId") {
-      onFarmhouseChange(value);
+    if (name === "farmhouseName") {
+      const farm = FARMHOUSES.find((f) => f.name === value);
+      if (farm) onFarmhouseChange(farm.id);
     }
 
     // Clear error on change
     if (errors[name]) {
-      const error = validateField(name, newValue);
+      const error = validateField(name, value);
       setErrors((prev) => ({ ...prev, [name]: error }));
     }
   };
@@ -149,34 +143,45 @@ export default function ContactSection({
     setIsSubmitting(true);
     try {
       const payload = {
-        ...formData,
-        contactNumber: formData.contactNumber.replace(/[-\s]/g, ""),
+        name: formData.name.trim(),
+        number: formData.number.replace(/[-\s]/g, ""),
+        farmhouseName: formData.farmhouseName,
+        eventDate: formData.eventDate,
+        slots: formData.slots,
+        budget: formData.budget.trim(),
+        query: formData.query.trim(),
       };
 
-      const res = await fetch("/api/booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        "https://ajtestbackend-production.up.railway.app/api/inquiries",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        toast.success(data.message);
+      if (res.ok) {
+        toast.success(
+          "Booking inquiry received! We will contact you within 24 hours."
+        );
         setFormData({
-          fullName: "",
-          contactNumber: "",
-          email: "",
-          farmhouseId: "",
-          checkInDate: "",
-          checkOutDate: "",
-          numberOfGuests: 1,
-          specialRequests: "",
+          name: "",
+          number: "",
+          farmhouseName: "",
+          eventDate: "",
+          slots: "",
+          budget: "",
+          query: "",
         });
         onFarmhouseChange("");
         setErrors({});
       } else {
-        toast.error(data.message || "Something went wrong.");
+        const data = await res.json().catch(() => null);
+        toast.error(
+          data?.message ||
+            "Something went wrong. Please try again or contact us directly on WhatsApp."
+        );
       }
     } catch {
       toast.error(
@@ -189,7 +194,8 @@ export default function ContactSection({
 
   const inputBaseClass =
     "w-full rounded-2xl border bg-white/60 px-5 py-4 text-sm text-brown-800 placeholder-amber-900/40 backdrop-blur-sm transition-all duration-300 hover:bg-white/80 focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-700/20 focus:border-amber-700 shadow-sm";
-  const inputErrorClass = "border-red-400 focus:ring-red-300 focus:border-red-400";
+  const inputErrorClass =
+    "border-red-400 focus:ring-red-300 focus:border-red-400";
   const inputNormalClass = "border-white/80 hover:border-white";
 
   return (
@@ -232,214 +238,190 @@ export default function ContactSection({
             >
               <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br from-cream-100 to-cream-200 opacity-30 blur-3xl pointer-events-none" />
               <div className="relative z-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                {/* Full Name */}
+                {/* Name */}
                 <div>
                   <label
-                    htmlFor="fullName"
+                    htmlFor="name"
                     className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
-                    Full Name <span className="text-red-500">*</span>
+                    Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    id="fullName"
-                    name="fullName"
-                    value={formData.fullName}
+                    id="name"
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     placeholder="Your full name"
-                    className={`${inputBaseClass} ${errors.fullName ? inputErrorClass : inputNormalClass}`}
+                    className={`${inputBaseClass} ${errors.name ? inputErrorClass : inputNormalClass}`}
                   />
-                  {errors.fullName && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {errors.fullName}
-                    </p>
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-500">{errors.name}</p>
                   )}
                 </div>
 
-                {/* Contact Number */}
+                {/* Number */}
                 <div>
                   <label
-                    htmlFor="contactNumber"
+                    htmlFor="number"
                     className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
-                    Contact Number <span className="text-red-500">*</span>
+                    Number <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
-                    id="contactNumber"
-                    name="contactNumber"
-                    value={formData.contactNumber}
+                    id="number"
+                    name="number"
+                    value={formData.number}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    placeholder="03XX-XXXXXXX or +92XXXXXXXXXX"
-                    className={`${inputBaseClass} ${errors.contactNumber ? inputErrorClass : inputNormalClass}`}
+                    placeholder="03XX-XXXXXXX"
+                    className={`${inputBaseClass} ${errors.number ? inputErrorClass : inputNormalClass}`}
                   />
-                  {errors.contactNumber && (
+                  {errors.number && (
                     <p className="mt-1 text-xs text-red-500">
-                      {errors.contactNumber}
+                      {errors.number}
                     </p>
                   )}
                 </div>
 
-                {/* Email */}
+                {/* Farmhouse Name */}
                 <div>
                   <label
-                    htmlFor="email"
+                    htmlFor="farmhouseName"
                     className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    placeholder="you@example.com"
-                    className={`${inputBaseClass} ${errors.email ? inputErrorClass : inputNormalClass}`}
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-                  )}
-                </div>
-
-                {/* Select Farmhouse */}
-                <div>
-                  <label
-                    htmlFor="farmhouseId"
-                    className="mb-1.5 block text-sm font-medium text-brown-800"
-                  >
-                    Select Farmhouse <span className="text-red-500">*</span>
+                    Farmhouse Name <span className="text-red-500">*</span>
                   </label>
                   <select
-                    id="farmhouseId"
-                    name="farmhouseId"
-                    value={formData.farmhouseId}
+                    id="farmhouseName"
+                    name="farmhouseName"
+                    value={formData.farmhouseName}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`${inputBaseClass} ${errors.farmhouseId ? inputErrorClass : inputNormalClass}`}
+                    className={`${inputBaseClass} ${errors.farmhouseName ? inputErrorClass : inputNormalClass}`}
                   >
                     <option value="">Select a farmhouse...</option>
                     {FARMHOUSES.map((farm) => (
-                      <option key={farm.id} value={farm.id}>
-                        {farm.name} — {farm.location}
+                      <option key={farm.id} value={farm.name}>
+                        {farm.name}
                       </option>
                     ))}
                   </select>
-                  {errors.farmhouseId && (
+                  {errors.farmhouseName && (
                     <p className="mt-1 text-xs text-red-500">
-                      {errors.farmhouseId}
+                      {errors.farmhouseName}
                     </p>
                   )}
                 </div>
 
-                {/* Check-in Date */}
+                {/* Event Date */}
                 <div>
                   <label
-                    htmlFor="checkInDate"
+                    htmlFor="eventDate"
                     className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
-                    Check-in Date <span className="text-red-500">*</span>
+                    Event Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
-                    id="checkInDate"
-                    name="checkInDate"
-                    value={formData.checkInDate}
+                    id="eventDate"
+                    name="eventDate"
+                    value={formData.eventDate}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     min={today}
-                    className={`${inputBaseClass} ${errors.checkInDate ? inputErrorClass : inputNormalClass}`}
+                    className={`${inputBaseClass} ${errors.eventDate ? inputErrorClass : inputNormalClass}`}
                   />
-                  {errors.checkInDate && (
+                  {errors.eventDate && (
                     <p className="mt-1 text-xs text-red-500">
-                      {errors.checkInDate}
+                      {errors.eventDate}
                     </p>
                   )}
                 </div>
 
-                {/* Check-out Date */}
+                {/* Slots */}
                 <div>
                   <label
-                    htmlFor="checkOutDate"
+                    htmlFor="slots"
                     className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
-                    Check-out Date <span className="text-red-500">*</span>
+                    Slots <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
-                    id="checkOutDate"
-                    name="checkOutDate"
-                    value={formData.checkOutDate}
+                  <select
+                    id="slots"
+                    name="slots"
+                    value={formData.slots}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    min={minCheckOut}
-                    className={`${inputBaseClass} ${errors.checkOutDate ? inputErrorClass : inputNormalClass}`}
-                  />
-                  {errors.checkOutDate && (
+                    className={`${inputBaseClass} ${errors.slots ? inputErrorClass : inputNormalClass}`}
+                  >
+                    {SLOT_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.slots && (
                     <p className="mt-1 text-xs text-red-500">
-                      {errors.checkOutDate}
+                      {errors.slots}
                     </p>
                   )}
                 </div>
 
-                {/* Number of Guests */}
+                {/* Budget */}
                 <div>
                   <label
-                    htmlFor="numberOfGuests"
+                    htmlFor="budget"
                     className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
-                    Number of Guests <span className="text-red-500">*</span>
+                    Budget <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
-                    id="numberOfGuests"
-                    name="numberOfGuests"
-                    value={formData.numberOfGuests}
+                    type="text"
+                    id="budget"
+                    name="budget"
+                    value={formData.budget}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    min={1}
-                    max={50}
-                    className={`${inputBaseClass} ${errors.numberOfGuests ? inputErrorClass : inputNormalClass}`}
+                    placeholder="e.g. 50,000 PKR"
+                    className={`${inputBaseClass} ${errors.budget ? inputErrorClass : inputNormalClass}`}
                   />
-                  {errors.numberOfGuests && (
+                  {errors.budget && (
                     <p className="mt-1 text-xs text-red-500">
-                      {errors.numberOfGuests}
+                      {errors.budget}
                     </p>
                   )}
                 </div>
 
-                {/* Special Requests — full width */}
+                {/* Query — full width */}
                 <div className="sm:col-span-2">
                   <label
-                    htmlFor="specialRequests"
+                    htmlFor="query"
                     className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
-                    Special Requests{" "}
+                    Query{" "}
                     <span className="text-amber-900/40">(optional)</span>
                   </label>
                   <textarea
-                    id="specialRequests"
-                    name="specialRequests"
-                    value={formData.specialRequests}
+                    id="query"
+                    name="query"
+                    value={formData.query}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     rows={3}
-                    placeholder="Any special requirements or notes..."
-                    className={`${inputBaseClass} resize-none ${errors.specialRequests ? inputErrorClass : inputNormalClass}`}
+                    placeholder="Any questions or special requirements..."
+                    className={`${inputBaseClass} resize-none ${errors.query ? inputErrorClass : inputNormalClass}`}
                   />
                   <div className="mt-1 flex justify-between">
-                    {errors.specialRequests ? (
-                      <p className="text-xs text-red-500">
-                        {errors.specialRequests}
-                      </p>
+                    {errors.query ? (
+                      <p className="text-xs text-red-500">{errors.query}</p>
                     ) : (
                       <span />
                     )}
                     <p className="text-xs text-amber-900/40">
-                      {formData.specialRequests.length}/500
+                      {formData.query.length}/1000
                     </p>
                   </div>
                 </div>
@@ -460,7 +442,10 @@ export default function ContactSection({
                     </>
                   ) : (
                     <>
-                      <Send size={20} className="transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1" />
+                      <Send
+                        size={20}
+                        className="transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1"
+                      />
                       Submit Booking Inquiry
                     </>
                   )}
@@ -520,7 +505,10 @@ export default function ContactSection({
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-700/10">
                       <MapPin size={18} className="text-amber-700" />
                     </div>
-                    <span>Office Z-53, Near Ideal Bakery, Block 7/8, Hill Park, Karachi</span>
+                    <span>
+                      Office Z-53, Near Ideal Bakery, Block 7/8, Hill Park,
+                      Karachi
+                    </span>
                   </div>
                 </li>
               </ul>

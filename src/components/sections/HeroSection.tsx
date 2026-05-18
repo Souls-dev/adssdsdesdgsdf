@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ChevronDown, Star, Palette, Play } from "lucide-react";
+import { ChevronDown, Star, Play } from "lucide-react";
 import Image from "next/image";
 
 // ── HERO SLIDE IMAGES ──────────────────────────────────────────
@@ -15,15 +15,12 @@ const HERO_SLIDES = [
   "/hero-slides/5.jpg",
 ];
 
-export default function HeroSection() {
-  const heroRef = useRef<HTMLDivElement>(null);
+interface HeroSectionProps {
+  theme: "theme1" | "theme2" | "theme3";
+}
 
-  // ── THEME SWITCHER STATE ────────────────────────────────────
-  // NOTE FOR AGENCY: To remove theme switching:
-  //   1. Delete the useState below
-  //   2. Delete the "THEME SWITCHER BUTTON" div
-  //   3. Keep only the theme JSX you want (theme1, theme2, or theme3)
-  const [theme, setTheme] = useState<"theme1" | "theme2" | "theme3">("theme1");
+export default function HeroSection({ theme }: HeroSectionProps) {
+  const heroRef = useRef<HTMLDivElement>(null);
 
   // ── T3: Auto-sliding background image state ─────────────────
   const [slideIndex, setSlideIndex] = useState(0);
@@ -64,35 +61,6 @@ export default function HeroSection() {
 
   return (
     <>
-      {/* =========================================
-          THEME SWITCHER BUTTON (EASILY REMOVABLE)
-          To remove: delete this entire div block.
-          ========================================= */}
-      <div className="fixed right-4 top-1/2 z-[100] flex -translate-y-1/2 flex-col items-center gap-2 rounded-full bg-black/50 p-2 backdrop-blur-md shadow-2xl border border-white/10">
-        <div className="mb-1 text-white/50">
-          <Palette size={14} />
-        </div>
-        {(["theme1", "theme2", "theme3"] as const).map((t, i) => (
-          <button
-            key={t}
-            onClick={() => setTheme(t)}
-            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold shadow-lg transition-all duration-300 ${
-              theme === t
-                ? "bg-gradient-to-r from-cream-300 to-amber-500 text-brown-800 scale-110"
-                : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
-            }`}
-            title={
-              i === 0
-                ? "Theme 1: Video Placeholder"
-                : i === 1
-                ? "Theme 2: Classic Gradient"
-                : "Theme 3: Sliding Images"
-            }
-          >
-            T{i + 1}
-          </button>
-        ))}
-      </div>
 
       {/* =========================================
           THEME 1: PRO MAX UI — VIDEO PLACEHOLDER
@@ -253,7 +221,7 @@ export default function HeroSection() {
 // ── Shared Hero Content (used by all 3 themes) ───────────────
 function HeroContent() {
   return (
-    <div className="relative z-20 mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8 pt-20">
+    <div className="relative z-20 mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8 pt-20 pb-32 md:pb-40">
       {/* Badge */}
       <div className="hero-animate mb-8 inline-flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-5 py-2.5 opacity-0 shadow-2xl backdrop-blur-md transition-all duration-300 hover:bg-white/20">
         <div className="flex gap-1 text-cream-300">
@@ -337,13 +305,6 @@ function StatsBanner() {
           <p className="text-xl font-bold text-cream-300">24/7</p>
           <p className="text-[10px] uppercase tracking-wider text-gray-300">
             Dedicated Support
-          </p>
-        </div>
-        <div className="h-8 w-px bg-white/20" />
-        <div className="text-center">
-          <p className="text-xl font-bold text-cream-300">100%</p>
-          <p className="text-[10px] uppercase tracking-wider text-gray-300">
-            Satisfaction
           </p>
         </div>
       </div>

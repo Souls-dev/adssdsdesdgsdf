@@ -36,7 +36,7 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
     if (allFailed || totalSlides <= 1) return;
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
-    }, 2500);
+    }, 1000);
   }, [allFailed, totalSlides]);
 
   const stopAutoSwipe = useCallback(() => {
