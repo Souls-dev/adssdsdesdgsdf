@@ -611,6 +611,49 @@ export const FARMHOUSES: FarmhouseType[] = [
     available: true,
   },
 
+  // ──────────────── HOLIDAY FARMHOUSE ────────────────
+  {
+    id: "holiday",
+    name: "Holiday Farmhouse",
+    location: "Karachi, Sindh, Pakistan",
+    shortDescription:
+      "A complete holiday retreat featuring 3 bedrooms with attached bathrooms, dual pools, a baithak, and a dedicated cricket ground.",
+    fullDescription:
+      "Holiday Farmhouse is your ultimate destination for a perfect getaway. This beautifully designed property features 3 comfortable bedrooms with attached bathrooms (including 2 AC rooms) and a traditional baithak for gathering. The outdoors offer a lush green garden, adult swimming pool, kids pool, and a cemented slide for endless fun. Sports enthusiasts will love the dedicated cricket ground, kids playing area, and indoor games. Fully equipped with a kitchen, stand-by generator, deep freezer, water dispenser, and filled gas cylinder, we ensure a seamless experience. Round-the-clock security and a dedicated caretaker are on-site to make your stay safe and relaxing.",
+    pricePerNight: 24000,
+    weekendSurcharge: 5000,
+    maxGuests: 20,
+    bedrooms: 3,
+    bathrooms: 3,
+    amenities: [
+      "Adult Swimming Pool",
+      "Kids Pool",
+      "Cemented Slide",
+      "Baithak",
+      "Lush Green Garden",
+      "Kids Playing Area",
+      "Cricket Ground",
+      "Indoor Games",
+      "Air Conditioning",
+      "Kitchen",
+      "Car Parking",
+      "Generator Backup",
+      "Deep Freezer",
+      "Water Dispenser",
+      "Security Guard",
+      "Care-Taker",
+      "Gas Cylinder",
+    ],
+    coverImage: "/farmhouses/holiday/IMG-20220618-WA0048.jpg",
+    images: [
+      "/farmhouses/holiday/IMG-20220618-WA0048.jpg",
+      "/farmhouses/holiday/IMG-20220618-WA0062.jpg",
+      "/farmhouses/holiday/IMG-20220618-WA0066.jpg",
+      "/farmhouses/holiday/IMG-20220618-WA0068.jpg",
+      "/farmhouses/holiday/IMG-20220618-WA0072.jpg",
+    ],
+    available: true,
+  },
 ];
 
 export const FARMHOUSE_IDS = FARMHOUSES.map((f) => f.id) as [string, ...string[]];
