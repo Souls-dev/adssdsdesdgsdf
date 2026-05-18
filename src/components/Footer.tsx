@@ -126,33 +126,15 @@ export default function Footer() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
               </a>
               <a
-                href="https://facebook.com/Aljannatfarmhousebooking"
+                href="https://www.facebook.com/share/g/1B9TwRuyhP/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/70 transition-all duration-200 hover:bg-amber-700 hover:text-cream-100"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/70 transition-all duration-200 hover:bg-[#1877F2] hover:text-white"
                 aria-label="Facebook"
               >
-                <Globe size={18} />
-              </a>
-              <a
-                href="https://wa.me/+923332272020"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/70 transition-all duration-200 hover:bg-[#25D366] hover:text-white"
-                aria-label="WhatsApp"
-              >
-                <MessageCircle size={18} />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
               </a>
             </div>
-            <a
-              href="https://www.aljannatfarms.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-1.5 text-sm text-cream-100/50 transition-colors duration-200 hover:text-cream-300"
-            >
-              <Globe size={14} />
-              www.aljannatfarms.com
-            </a>
           </div>
         </div>
       </div>
