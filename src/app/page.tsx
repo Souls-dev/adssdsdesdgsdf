@@ -4,6 +4,7 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFAB from "@/components/WhatsAppFAB";
+import ThemeCustomizer from "@/components/ThemeCustomizer";
 import WebsiteThemeSwitcher from "@/components/WebsiteThemeSwitcher";
 import type { HeroTheme, ColorTheme } from "@/components/WebsiteThemeSwitcher";
 import HeroSection from "@/components/sections/HeroSection";
@@ -46,6 +47,7 @@ export default function Home() {
         colorTheme={colorTheme}
         onColorThemeChange={setColorTheme}
       />
+      <ThemeCustomizer />
     </>
   );
 }
