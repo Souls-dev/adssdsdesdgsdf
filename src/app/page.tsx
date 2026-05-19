@@ -1,22 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFAB from "@/components/WhatsAppFAB";
-import ThemeCustomizer from "@/components/ThemeCustomizer";
-import WebsiteThemeSwitcher from "@/components/WebsiteThemeSwitcher";
-import type { HeroTheme, ColorTheme } from "@/components/WebsiteThemeSwitcher";
 import HeroSection from "@/components/sections/HeroSection";
 import PackagesSection from "@/components/sections/PackagesSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import AboutSection from "@/components/sections/AboutSection";
 import ContactSection from "@/components/sections/ContactSection";
+import { applyTheme } from "@/lib/theme-utils";
 
 export default function Home() {
   const [selectedFarmhouse, setSelectedFarmhouse] = useState("");
-  const [heroTheme, setHeroTheme] = useState<HeroTheme>("theme1");
-  const [colorTheme, setColorTheme] = useState<ColorTheme>("gold");
+  const [settings, setSettings] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          setSettings(data);
+          // Apply color theme dynamically on load
+          if (data?.theme?.activeColorPreset) {
+            applyTheme(data.theme.activeColorPreset);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load site settings", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSettings();
+  }, []);
 
   const handleBookFarmhouse = (farmhouseId: string) => {
     setSelectedFarmhouse(farmhouseId);
@@ -26,28 +45,57 @@ export default function Home() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-amber-500 font-bold">
+        <div className="animate-pulse">Loading Al Jannat...</div>
+      </div>
+    );
+  }
+
+  // Fallback if settings didn't load properly (for safety)
+  const activeSettings = settings || {
+    theme: { heroTheme: "theme1", activeColorPreset: "gold" },
+    hero: {
+      badgeText: "32+ Years of Excellence",
+      headline: "Welcome to",
+      headlineAccent: "Al Jannat",
+      subheadline: "Pakistan's most trusted farmhouse booking agency — delivering premium solutions and property management since 1994. Where every stay becomes an unforgettable memory.",
+      ctaPrimary: { text: "Explore Farmhouses", href: "#packages" },
+      ctaSecondary: { text: "Book Now", href: "#contact" },
+      stats: [
+        { value: "10,000+", label: "Happy Customers" },
+        { value: "40+", label: "Premium Venues" },
+        { value: "24/7", label: "Dedicated Support" }
+      ],
+      videoUrl: "",
+      slides: []
+    },
+    sections: {
+      packages: { subtitle: "Our Collection", title: "Luxury Farmhouses", description: "Handpicked properties across Karachi, each offering a unique blend of comfort, entertainment, and natural beauty." },
+      services: { subtitle: "What We Offer", title: "A Complete One-Roof Solution", description: "With over three decades of experience, we manage everything from booking to facilities — delivering peace of mind every step of the way.", amenitiesTitle: "Signature Amenities", coreServices: [], amenities: [] },
+      about: { subtitle: "Who We Are", title: "About Al Jannat", heading: "32 Years of Unmatched Hospitality", paragraphs: ["", ""], promiseTitle: "", promiseText: "", valuesTitle: "", values: [], stats: [] },
+      contact: { subtitle: "Get In Touch", title: "Book Your Stay", description: "Fill out the form below and our team will get back to you within 24 hours to confirm your booking." }
+    },
+    footer: { brandDescription: "", phone1: "", phone1Href: "", phone2: "", phone2Href: "", whatsapp: "", whatsappHref: "", email: "", address: "", instagram: "", facebook: "", copyright: "" }
+  };
+
   return (
     <>
       <Navbar />
       <main>
-        <HeroSection theme={heroTheme} />
-        <PackagesSection onBookFarmhouse={handleBookFarmhouse} />
-        <ServicesSection />
-        <AboutSection />
+        <HeroSection theme={activeSettings.theme.heroTheme} settings={activeSettings.hero} />
+        <PackagesSection onBookFarmhouse={handleBookFarmhouse} settings={activeSettings.sections.packages} />
+        <ServicesSection settings={activeSettings.sections.services} />
+        <AboutSection settings={activeSettings.sections.about} />
         <ContactSection
           selectedFarmhouse={selectedFarmhouse}
           onFarmhouseChange={setSelectedFarmhouse}
+          settings={activeSettings.sections.contact}
         />
       </main>
-      <Footer />
-      <WhatsAppFAB />
-      <WebsiteThemeSwitcher
-        heroTheme={heroTheme}
-        onHeroThemeChange={setHeroTheme}
-        colorTheme={colorTheme}
-        onColorThemeChange={setColorTheme}
-      />
-      <ThemeCustomizer />
+      <Footer settings={activeSettings.footer} />
+      <WhatsAppFAB settings={activeSettings.footer} />
     </>
   );
 }

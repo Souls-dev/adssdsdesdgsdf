@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   MapPin,
   Bed,
@@ -10,18 +10,58 @@ import {
   ChevronUp,
   MessageCircle,
 } from "lucide-react";
-import { FARMHOUSES } from "@/data/farmhouses";
 import ImageCarousel from "@/components/ImageCarousel";
+
+type Farmhouse = {
+  id: string;
+  name: string;
+  location: string;
+  shortDescription: string;
+  fullDescription: string;
+  pricePerNight: number;
+  weekendSurcharge: number;
+  maxGuests: number;
+  bedrooms: number;
+  bathrooms: number;
+  amenities: string[];
+  coverImage: string;
+  images: string[];
+  available: boolean;
+  pricingEnabled?: boolean;
+};
 
 interface PackagesSectionProps {
   onBookFarmhouse: (farmhouseId: string) => void;
+  settings: {
+    subtitle: string;
+    title: string;
+    description: string;
+  };
 }
-
 
 export default function PackagesSection({
   onBookFarmhouse,
+  settings,
 }: PackagesSectionProps) {
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [farmhouses, setFarmhouses] = useState<Farmhouse[]>([]);
+
+  useEffect(() => {
+    async function loadFarmhouses() {
+      try {
+        const res = await fetch("/api/admin/farmhouses");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setFarmhouses(data.farmhouses.filter((f: Farmhouse) => f.available));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load farmhouses", err);
+      }
+    }
+    loadFarmhouses();
+  }, []);
 
   const toggleExpand = (id: string) => {
     setExpandedCard(expandedCard === id ? null : id);
@@ -32,47 +72,39 @@ export default function PackagesSection({
       id="packages"
       className="relative py-16 sm:py-20 lg:py-24 bg-cream-50"
     >
-      {/* Decorative top gradient */}
       <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-brown-900/5 to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
         <div className="mb-12 text-center sm:mb-16">
           <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-amber-700">
-            Our Collection
+            {settings.subtitle}
           </p>
           <h2
             className="mb-4 text-3xl font-bold text-brown-800 sm:text-4xl lg:text-5xl"
             style={{ fontFamily: "var(--font-heading)" }}
           >
-            Luxury Farmhouses
+            {settings.title}
           </h2>
           <p className="mx-auto max-w-2xl text-base text-amber-900/70 sm:text-lg">
-            Handpicked properties across Karachi, each offering a unique blend
-            of comfort, entertainment, and natural beauty.
+            {settings.description}
           </p>
         </div>
 
-        {/* Cards grid */}
         <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
-          {FARMHOUSES.map((farm) => (
+          {farmhouses.map((farm) => (
             <div
               key={farm.id}
               className="group overflow-hidden rounded-2xl border border-amber-800/10 bg-white shadow-sm transition-shadow duration-200 hover:shadow-lg"
             >
-              {/* Image carousel */}
               <div className="relative">
                 <ImageCarousel
                   images={farm.images}
                   alt={farm.name}
                   fallbackName={farm.name}
                 />
-
               </div>
 
-              {/* Content */}
               <div className="p-5 sm:p-6">
-                {/* Name + Location */}
                 <h3
                   className="mb-1 text-xl font-bold text-brown-800 sm:text-2xl"
                   style={{ fontFamily: "var(--font-heading)" }}
@@ -84,12 +116,10 @@ export default function PackagesSection({
                   {farm.location}
                 </div>
 
-                {/* Short description */}
                 <p className="line-clamp-2 mb-4 text-sm leading-relaxed text-amber-900/70">
                   {farm.shortDescription}
                 </p>
 
-                {/* Pricing */}
                 <div className="mb-4 flex items-center gap-2">
                   {farm.pricingEnabled ? (
                     <div className="flex items-baseline gap-1">
@@ -116,7 +146,6 @@ export default function PackagesSection({
                   )}
                 </div>
 
-                {/* Stats row */}
                 <div className="mb-4 flex items-center gap-4 text-sm text-amber-900/70">
                   <div className="flex items-center gap-1.5">
                     <Bed size={16} className="text-amber-700" />
@@ -132,7 +161,6 @@ export default function PackagesSection({
                   </div>
                 </div>
 
-                {/* Top 4 amenities */}
                 <div className="mb-5 flex flex-wrap gap-2">
                   {farm.amenities.slice(0, 4).map((amenity) => (
                     <span
@@ -149,7 +177,6 @@ export default function PackagesSection({
                   )}
                 </div>
 
-                {/* Expanded details */}
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
                     expandedCard === farm.id
@@ -174,15 +201,9 @@ export default function PackagesSection({
                         </span>
                       ))}
                     </div>
-                    <div className="mt-3 rounded-lg bg-[#25D366]/5 border border-[#25D366]/20 p-3">
-                      <p className="text-sm font-medium text-amber-900/80">
-                        💬 Contact us on WhatsApp for the latest rates and seasonal offers.
-                      </p>
-                    </div>
                   </div>
                 </div>
 
-                {/* Action buttons */}
                 <div className="flex gap-3">
                   <button
                     onClick={() => toggleExpand(farm.id)}

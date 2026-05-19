@@ -1,37 +1,48 @@
 "use client";
 
 import Image from "next/image";
-import { Award, Heart, Home, Handshake, ShieldCheck, Sparkles, Clock } from "lucide-react";
+import { Award, Heart, Home, Clock, Handshake, ShieldCheck, Sparkles, HelpCircle } from "lucide-react";
 
-const STATS = [
-  { value: "32+", label: "Years of Legacy", icon: Award },
-  { value: "10,000+", label: "Happy Customers", icon: Heart },
-  { value: "40+", label: "Premium Farmhouses", icon: Home },
-  { value: "24/7", label: "Dedicated Support", icon: Clock },
-];
+interface ValueItem {
+  title: string;
+  description: string;
+}
 
-const VALUES = [
-  {
-    icon: Handshake,
-    title: "Relationship",
-    description:
-      "We believe in straightforward, honest communication. Our team works closely with both property owners and guests to ensure everyone is on the same page from booking to checkout.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Trust",
-    description:
-      "For over 30 years, we have kept our promises. If there is an issue with a property, we address it immediately. We only list farmhouses that meet our strict standards for safety and cleanliness.",
-  },
-  {
-    icon: Sparkles,
-    title: "Spirit of Service",
-    description:
-      "Service is at the core of our business. Our caretakers and support staff are trained to be helpful and respectful, making sure your events run smoothly without unnecessary interruptions.",
-  },
-];
+interface StatItem {
+  value: string;
+  label: string;
+}
 
-export default function AboutSection() {
+interface AboutSectionProps {
+  settings: {
+    subtitle: string;
+    title: string;
+    heading: string;
+    paragraphs: string[];
+    promiseTitle: string;
+    promiseText: string;
+    valuesTitle: string;
+    values: ValueItem[];
+    stats: StatItem[];
+  };
+}
+
+const STAT_ICONS = [Award, Heart, Home, Clock];
+const VALUE_ICONS = [Handshake, ShieldCheck, Sparkles];
+
+export default function AboutSection({ settings }: AboutSectionProps) {
+  const paragraphs = settings.paragraphs || [];
+  const values = settings.values || [];
+  const stats = settings.stats || [];
+
+  const getStatIcon = (index: number) => {
+    return STAT_ICONS[index % STAT_ICONS.length] || HelpCircle;
+  };
+
+  const getValueIcon = (index: number) => {
+    return VALUE_ICONS[index % VALUE_ICONS.length] || HelpCircle;
+  };
+
   return (
     <section
       id="about"
@@ -46,13 +57,13 @@ export default function AboutSection() {
         {/* Section header */}
         <div className="mb-12 text-center sm:mb-16">
           <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-amber-700">
-            Who We Are
+            {settings.subtitle || "Who We Are"}
           </p>
           <h2
             className="mb-4 text-3xl font-bold text-brown-800 sm:text-4xl lg:text-5xl"
             style={{ fontFamily: "var(--font-heading)" }}
           >
-            About Al Jannat
+            {settings.title || "About Al Jannat"}
           </h2>
         </div>
 
@@ -64,28 +75,28 @@ export default function AboutSection() {
               className="mb-4 text-2xl font-bold text-brown-800 sm:text-3xl"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              32 Years of{" "}
-              <span className="text-amber-700">Unmatched Hospitality</span>
+              {settings.heading || "32 Years of Unmatched Hospitality"}
             </h3>
-            <p className="mb-4 text-base leading-relaxed text-amber-900/75">
-              Since 1994, Al Jannat Farmhouse Booking Agency has helped families and businesses host successful events. We understand that finding the right venue can be stressful, which is why our team works directly with you to ensure your family reunions, corporate retreats, and special celebrations go off without a hitch. We have built our reputation on reliable service over the last three decades.
-            </p>
-            <p className="mb-6 text-base leading-relaxed text-amber-900/75">
-              We started small and gradually expanded our network to include some of the most reliable properties in Karachi. Our approach is straightforward: we offer well-maintained farmhouses and honest guidance. Instead of just handing over the keys, we make sure the facilities are ready, the environment is secure, and you have exactly what you need to enjoy your stay.
-            </p>
+            {paragraphs.map((p, i) => (
+              <p key={i} className="mb-4 text-base leading-relaxed text-amber-900/75 last:mb-6">
+                {p}
+              </p>
+            ))}
 
             {/* Our Promise card */}
-            <div className="rounded-2xl border border-amber-700/10 bg-gradient-to-br from-cream-100/50 to-white p-6">
-              <h4
-                className="mb-2 text-lg font-bold text-brown-800"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                Our Promise
-              </h4>
-              <p className="text-sm leading-relaxed text-amber-900/70">
-                Your trust is our biggest asset. We offer a 100% refund on valid cancellations and only partner with verified property owners. Our team is always on call, so you never have to deal with property issues alone. We handle the logistics so you can focus on your guests.
-              </p>
-            </div>
+            {settings.promiseText && (
+              <div className="rounded-2xl border border-amber-700/10 bg-gradient-to-br from-cream-100/50 to-white p-6">
+                <h4
+                  className="mb-2 text-lg font-bold text-brown-800"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  {settings.promiseTitle || "Our Promise"}
+                </h4>
+                <p className="text-sm leading-relaxed text-amber-900/70">
+                  {settings.promiseText}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Image grid right — uses real farmhouse photos */}
@@ -134,70 +145,74 @@ export default function AboutSection() {
         </div>
 
         {/* Values section */}
-        <div className="mb-20">
-          <h3
-            className="mb-10 text-center text-3xl font-bold text-brown-800 sm:text-4xl"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            Our Core Values
-          </h3>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-            {VALUES.map((value) => {
-              const Icon = value.icon;
+        {values.length > 0 && (
+          <div className="mb-20">
+            <h3
+              className="mb-10 text-center text-3xl font-bold text-brown-800 sm:text-4xl"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              {settings.valuesTitle || "Our Core Values"}
+            </h3>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              {values.map((value, i) => {
+                const Icon = getValueIcon(i);
+                return (
+                  <div
+                    key={value.title}
+                    className="group relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/40 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:bg-white/70 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]"
+                  >
+                    <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br from-cream-100 to-cream-200 opacity-40 blur-2xl transition-transform duration-700 group-hover:scale-150" />
+                    
+                    <div className="relative z-10">
+                      <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-700 to-amber-800 shadow-lg transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
+                        <Icon size={26} className="text-cream-100" />
+                      </div>
+                      <h4
+                        className="mb-3 text-xl font-bold text-brown-800"
+                        style={{ fontFamily: "var(--font-heading)" }}
+                      >
+                        {value.title}
+                      </h4>
+                      <p className="text-base leading-relaxed text-amber-900/75">
+                        {value.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Stats row */}
+        {stats.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
+            {stats.map((stat, i) => {
+              const Icon = getStatIcon(i);
               return (
                 <div
-                  key={value.title}
-                  className="group relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/40 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:bg-white/70 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]"
+                  key={stat.label}
+                  className="group flex items-center gap-5 rounded-full border border-white/60 bg-white/40 p-4 pr-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:bg-white/70 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]"
                 >
-                  <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br from-cream-100 to-cream-200 opacity-40 blur-2xl transition-transform duration-700 group-hover:scale-150" />
-                  
-                  <div className="relative z-10">
-                    <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-700 to-amber-800 shadow-lg transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
-                      <Icon size={26} className="text-cream-100" />
-                    </div>
-                    <h4
-                      className="mb-3 text-xl font-bold text-brown-800"
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-700 to-amber-800 shadow-lg transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
+                    <Icon size={28} className="text-cream-100" />
+                  </div>
+                  <div>
+                    <p
+                      className="text-3xl font-bold text-brown-800 lg:text-4xl"
                       style={{ fontFamily: "var(--font-heading)" }}
                     >
-                      {value.title}
-                    </h4>
-                    <p className="text-base leading-relaxed text-amber-900/75">
-                      {value.description}
+                      {stat.value}
+                    </p>
+                    <p className="text-sm font-medium text-amber-900/70 uppercase tracking-wider mt-1">
+                      {stat.label}
                     </p>
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
-
-        {/* Stats row */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
-          {STATS.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <div
-                key={stat.label}
-                className="group flex items-center gap-5 rounded-full border border-white/60 bg-white/40 p-4 pr-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:bg-white/70 hover:shadow-[0_8px_30px_rgb(180,83,9,0.1)]"
-              >
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-700 to-amber-800 shadow-lg transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
-                  <Icon size={28} className="text-cream-100" />
-                </div>
-                <div>
-                  <p
-                    className="text-3xl font-bold text-brown-800 lg:text-4xl"
-                    style={{ fontFamily: "var(--font-heading)" }}
-                  >
-                    {stat.value}
-                  </p>
-                  <p className="text-sm font-medium text-amber-900/70 uppercase tracking-wider mt-1">
-                    {stat.label}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        )}
       </div>
     </section>
   );

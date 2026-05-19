@@ -8,7 +8,24 @@ const QUICK_LINKS = [
   { label: "Contact", href: "#contact" },
 ];
 
-export default function Footer() {
+interface FooterProps {
+  settings: {
+    brandDescription: string;
+    phone1: string;
+    phone1Href: string;
+    phone2: string;
+    phone2Href: string;
+    whatsapp: string;
+    whatsappHref: string;
+    email: string;
+    address: string;
+    instagram: string;
+    facebook: string;
+    copyright: string;
+  };
+}
+
+export default function Footer({ settings }: FooterProps) {
   return (
     <footer className="bg-brown-900 text-cream-100">
       {/* Main footer */}
@@ -23,9 +40,7 @@ export default function Footer() {
               <span className="text-cream-300">Al</span> Jannat
             </h3>
             <p className="mt-3 text-sm leading-relaxed text-cream-100/70">
-              Pakistan&apos;s most trusted farmhouse booking agency with over 32
-              years of legacy. Delivering premium booking solutions and
-              unforgettable experiences since 1994.
+              {settings.brandDescription || "Pakistan's most trusted farmhouse booking agency with over 32 years of legacy. Delivering premium booking solutions and unforgettable experiences since 1994."}
             </p>
           </div>
 
@@ -60,50 +75,60 @@ export default function Footer() {
               Contact Info
             </h4>
             <ul className="space-y-3">
-              <li>
-                <a
-                  href="tel:02134548555"
-                  className="flex items-center gap-2 text-sm text-cream-100/70 transition-colors duration-200 hover:text-cream-300"
-                >
-                  <Phone size={16} className="shrink-0" />
-                  021-3454 8555
-                </a>
-              </li>
-              <li>
-                <a
-                  href="tel:02134544996"
-                  className="flex items-center gap-2 text-sm text-cream-100/70 transition-colors duration-200 hover:text-cream-300"
-                >
-                  <Phone size={16} className="shrink-0" />
-                  021-3454 4996
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://wa.me/+923332272020"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-cream-100/70 transition-colors duration-200 hover:text-[#25D366]"
-                >
-                  <MessageCircle size={16} className="shrink-0" />
-                  0333-227-2020 (WhatsApp)
-                </a>
-              </li>
-              <li>
-                <a
-                  href="mailto:info@aljannatfarms.com"
-                  className="flex items-center gap-2 text-sm text-cream-100/70 transition-colors duration-200 hover:text-cream-300"
-                >
-                  <Mail size={16} className="shrink-0" />
-                  info@aljannatfarms.com
-                </a>
-              </li>
-              <li>
-                <div className="flex items-start gap-2 text-sm text-cream-100/70">
-                  <MapPin size={16} className="mt-0.5 shrink-0" />
-                  <span>Office Z-53, Near Ideal Bakery, Block 7/8, Hill Park, Karachi</span>
-                </div>
-              </li>
+              {settings.phone1 && (
+                <li>
+                  <a
+                    href={settings.phone1Href || `tel:${settings.phone1.replace(/[-\s]/g, "")}`}
+                    className="flex items-center gap-2 text-sm text-cream-100/70 transition-colors duration-200 hover:text-cream-300"
+                  >
+                    <Phone size={16} className="shrink-0" />
+                    {settings.phone1}
+                  </a>
+                </li>
+              )}
+              {settings.phone2 && (
+                <li>
+                  <a
+                    href={settings.phone2Href || `tel:${settings.phone2.replace(/[-\s]/g, "")}`}
+                    className="flex items-center gap-2 text-sm text-cream-100/70 transition-colors duration-200 hover:text-cream-300"
+                  >
+                    <Phone size={16} className="shrink-0" />
+                    {settings.phone2}
+                  </a>
+                </li>
+              )}
+              {settings.whatsapp && (
+                <li>
+                  <a
+                    href={settings.whatsappHref || `https://wa.me/${settings.whatsapp.replace(/[-\s()]/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-cream-100/70 transition-colors duration-200 hover:text-[#25D366]"
+                  >
+                    <MessageCircle size={16} className="shrink-0" />
+                    {settings.whatsapp}
+                  </a>
+                </li>
+              )}
+              {settings.email && (
+                <li>
+                  <a
+                    href={`mailto:${settings.email}`}
+                    className="flex items-center gap-2 text-sm text-cream-100/70 transition-colors duration-200 hover:text-cream-300"
+                  >
+                    <Mail size={16} className="shrink-0" />
+                    {settings.email}
+                  </a>
+                </li>
+              )}
+              {settings.address && (
+                <li>
+                  <div className="flex items-start gap-2 text-sm text-cream-100/70">
+                    <MapPin size={16} className="mt-0.5 shrink-0" />
+                    <span>{settings.address}</span>
+                  </div>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -116,24 +141,28 @@ export default function Footer() {
               Follow Us
             </h4>
             <div className="flex gap-3">
-              <a
-                href="https://www.instagram.com/aljannatfarmhousebooking"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/70 transition-all duration-200 hover:bg-gradient-to-br hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:text-white"
-                aria-label="Instagram"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-              </a>
-              <a
-                href="https://www.facebook.com/share/g/1B9TwRuyhP/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/70 transition-all duration-200 hover:bg-[#1877F2] hover:text-white"
-                aria-label="Facebook"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-              </a>
+              {settings.instagram && (
+                <a
+                  href={settings.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/70 transition-all duration-200 hover:bg-gradient-to-br hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#bc1888] hover:text-white"
+                  aria-label="Instagram"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                </a>
+              )}
+              {settings.facebook && (
+                <a
+                  href={settings.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-100/10 text-cream-100/70 transition-all duration-200 hover:bg-[#1877F2] hover:text-white"
+                  aria-label="Facebook"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -143,8 +172,7 @@ export default function Footer() {
       <div className="border-t border-cream-100/10">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <p className="text-center text-xs text-cream-100/50">
-            © {new Date().getFullYear()} Al Jannat Farmhouse Booking Agency. All rights
-            reserved.
+            © {new Date().getFullYear()} {settings.copyright || "Al Jannat Farmhouse Booking Agency. All rights reserved."}
           </p>
         </div>
       </div>

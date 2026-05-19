@@ -1,28 +1,14 @@
-"use client";
-
-import { useEffect } from "react";
-import { Palette, Paintbrush } from "lucide-react";
-
-// ── Hero layout themes (existing) ────────────────────────────
-export type HeroTheme = "theme1" | "theme2" | "theme3";
-
-// ── Website color themes ─────────────────────────────────────
 export type ColorTheme = "gold" | "green" | "red" | "blue" | "yellow" | "logo";
 
-type ColorOverrides = Record<string, string>;
+export type ColorOverrides = Record<string, string>;
 
-const COLOR_THEMES: Record<
-  ColorTheme,
-  { label: string; preview: string; overrides: ColorOverrides }
-> = {
+export const COLOR_THEMES: Record<ColorTheme, { label: string; overrides: ColorOverrides }> = {
   gold: {
     label: "Gold",
-    preview: "from-amber-600 to-amber-800",
-    overrides: {}, // Default — no overrides needed
+    overrides: {}, // Default — uses CSS defaults
   },
   green: {
     label: "Green",
-    preview: "from-emerald-500 to-emerald-800",
     overrides: {
       "--color-cream-50": "#ecfdf5",
       "--color-cream-100": "#d1fae5",
@@ -56,7 +42,6 @@ const COLOR_THEMES: Record<
   },
   red: {
     label: "Red",
-    preview: "from-rose-500 to-rose-800",
     overrides: {
       "--color-cream-50": "#fff1f2",
       "--color-cream-100": "#ffe4e6",
@@ -90,7 +75,6 @@ const COLOR_THEMES: Record<
   },
   blue: {
     label: "Blue",
-    preview: "from-blue-500 to-blue-800",
     overrides: {
       "--color-cream-50": "#eff6ff",
       "--color-cream-100": "#dbeafe",
@@ -124,7 +108,6 @@ const COLOR_THEMES: Record<
   },
   yellow: {
     label: "Yellow",
-    preview: "from-yellow-400 to-yellow-700",
     overrides: {
       "--color-cream-50": "#fefce8",
       "--color-cream-100": "#fef9c3",
@@ -158,7 +141,6 @@ const COLOR_THEMES: Record<
   },
   logo: {
     label: "Logo",
-    preview: "from-green-500 via-yellow-400 to-blue-500",
     overrides: {
       "--color-cream-50": "#f0fdf4",
       "--color-cream-100": "#dcfce7",
@@ -192,8 +174,7 @@ const COLOR_THEMES: Record<
   },
 };
 
-// ── Default CSS values (gold theme) to restore on reset ──────
-const DEFAULT_CSS_VARS: ColorOverrides = {
+export const DEFAULT_CSS_VARS: ColorOverrides = {
   "--color-cream-50": "#fffbeb",
   "--color-cream-100": "#fef3c7",
   "--color-cream-200": "#fde68a",
@@ -224,98 +205,24 @@ const DEFAULT_CSS_VARS: ColorOverrides = {
   "--color-text-light": "#fef3c7",
 };
 
-interface Props {
-  heroTheme: HeroTheme;
-  onHeroThemeChange: (t: HeroTheme) => void;
-  colorTheme: ColorTheme;
-  onColorThemeChange: (t: ColorTheme) => void;
-}
+export function applyTheme(preset: string) {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const themeKey = preset as ColorTheme;
+  const theme = COLOR_THEMES[themeKey] || COLOR_THEMES.gold;
 
-export default function WebsiteThemeSwitcher({
-  heroTheme,
-  onHeroThemeChange,
-  colorTheme,
-  onColorThemeChange,
-}: Props) {
-  // Apply color overrides whenever colorTheme changes
-  useEffect(() => {
-    const root = document.documentElement;
-    const theme = COLOR_THEMES[colorTheme];
-
-    if (colorTheme === "gold") {
-      // Restore defaults
-      Object.entries(DEFAULT_CSS_VARS).forEach(([key, value]) => {
-        root.style.setProperty(key, value);
-      });
-    } else {
-      Object.entries(theme.overrides).forEach(([key, value]) => {
-        root.style.setProperty(key, value);
-      });
-    }
-  }, [colorTheme]);
-
-  return (
-    <div className="fixed right-4 top-1/2 z-[100] flex -translate-y-1/2 flex-col items-center gap-1 rounded-2xl bg-black/50 p-2 backdrop-blur-md shadow-2xl border border-white/10">
-      {/* Hero Layout Section */}
-      <div className="mb-1 text-white/50">
-        <Palette size={14} />
-      </div>
-      {(["theme1", "theme2", "theme3"] as const).map((t, i) => (
-        <button
-          key={t}
-          onClick={() => onHeroThemeChange(t)}
-          className={`flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold shadow-lg transition-all duration-300 ${
-            heroTheme === t
-              ? "bg-gradient-to-r from-cream-300 to-amber-500 text-brown-800 scale-110"
-              : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
-          }`}
-          title={
-            i === 0
-              ? "Theme 1: Video Placeholder"
-              : i === 1
-              ? "Theme 2: Classic Gradient"
-              : "Theme 3: Sliding Images"
-          }
-        >
-          T{i + 1}
-        </button>
-      ))}
-
-      {/* Divider */}
-      <div className="my-1 h-px w-6 bg-white/20" />
-
-      {/* Website Color Section */}
-      <div className="mb-1 text-white/50">
-        <Paintbrush size={14} />
-      </div>
-      {(["gold", "green", "red", "blue", "yellow", "logo"] as const).map((t, i) => (
-        <button
-          key={t}
-          onClick={() => onColorThemeChange(t)}
-          className={`flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold shadow-lg transition-all duration-300 ${
-            colorTheme === t
-              ? "scale-110 ring-2 ring-white/60"
-              : "hover:scale-105"
-          }`}
-          style={{
-            background:
-              t === "gold"
-                ? "linear-gradient(135deg, #b45309, #92400e)"
-                : t === "green"
-                ? "linear-gradient(135deg, #10b981, #065f46)"
-                : t === "red"
-                ? "linear-gradient(135deg, #f43f5e, #9f1239)"
-                : t === "blue"
-                ? "linear-gradient(135deg, #3b82f6, #1e40af)"
-                : t === "yellow"
-                ? "linear-gradient(135deg, #eab308, #a16207)"
-                : "linear-gradient(135deg, #16a34a, #eab308, #2563eb)",
-          }}
-          title={`Color Theme: ${COLOR_THEMES[t].label}`}
-        >
-          <span className="text-white/90 drop-shadow-sm">C{i + 1}</span>
-        </button>
-      ))}
-    </div>
-  );
+  if (themeKey === "gold" || !theme) {
+    Object.entries(DEFAULT_CSS_VARS).forEach(([key, value]) => {
+      root.style.setProperty(key, value);
+    });
+  } else {
+    // Reset defaults first to ensure no variables are left over from other themes
+    Object.entries(DEFAULT_CSS_VARS).forEach(([key, value]) => {
+      root.style.setProperty(key, value);
+    });
+    // Apply new overrides
+    Object.entries(theme.overrides).forEach(([key, value]) => {
+      root.style.setProperty(key, value);
+    });
+  }
 }

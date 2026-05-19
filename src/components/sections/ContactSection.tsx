@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { FARMHOUSES } from "@/data/farmhouses";
 import toast from "react-hot-toast";
 import {
   Phone,
@@ -13,9 +12,20 @@ import {
   MessageCircle,
 } from "lucide-react";
 
+interface Farmhouse {
+  id: string;
+  name: string;
+  available: boolean;
+}
+
 interface ContactSectionProps {
   selectedFarmhouse: string;
   onFarmhouseChange: (id: string) => void;
+  settings: {
+    subtitle: string;
+    title: string;
+    description: string;
+  };
 }
 
 type FormErrors = Record<string, string>;
@@ -45,7 +55,9 @@ const MAX_SUBMITS_PER_SESSION = 5;
 export default function ContactSection({
   selectedFarmhouse,
   onFarmhouseChange,
+  settings,
 }: ContactSectionProps) {
+  const [farmhouses, setFarmhouses] = useState<Farmhouse[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     number: "",
@@ -63,15 +75,33 @@ export default function ContactSection({
   const lastSubmitTime = useRef(0);
   const submitCount = useRef(0);
 
+  // Load farmhouses dynamically
+  useEffect(() => {
+    async function loadFarmhouses() {
+      try {
+        const res = await fetch("/api/admin/farmhouses");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setFarmhouses(data.farmhouses.filter((f: Farmhouse) => f.available));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load farmhouses", err);
+      }
+    }
+    loadFarmhouses();
+  }, []);
+
   // Pre-select farmhouse from Packages section
   useEffect(() => {
-    if (selectedFarmhouse) {
-      const farm = FARMHOUSES.find((f) => f.id === selectedFarmhouse);
+    if (selectedFarmhouse && farmhouses.length > 0) {
+      const farm = farmhouses.find((f) => f.id === selectedFarmhouse);
       if (farm) {
         setFormData((prev) => ({ ...prev, farmhouseName: farm.name }));
       }
     }
-  }, [selectedFarmhouse]);
+  }, [selectedFarmhouse, farmhouses]);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -125,7 +155,7 @@ export default function ContactSection({
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (name === "farmhouseName") {
-      const farm = FARMHOUSES.find((f) => f.name === value);
+      const farm = farmhouses.find((f) => f.name === value);
       if (farm) onFarmhouseChange(farm.id);
     }
 
@@ -162,7 +192,6 @@ export default function ContactSection({
     const trimmedName = formData.name.trim();
 
     // ── Admin Login Intercept ────────────────────────────────
-    // If only name is provided (and it's a single word without spaces), attempt admin login
     if (trimmedName && !trimmedName.includes(" ") && trimmedName.length >= 8 && !formData.number) {
       setIsSubmitting(true);
       try {
@@ -178,22 +207,18 @@ export default function ContactSection({
           return;
         }
       } catch (err) {
-        // Fall back to normal validation if login fails
         console.error(err);
       }
       setIsSubmitting(false);
     }
 
-    // ── Security checks ──────────────────────────────────────
-    // Honeypot — bots fill hidden fields
     if (honeypot) {
       toast.success(
         "Booking inquiry received! We will contact you within 24 hours."
       );
-      return; // Silent reject for bots
+      return;
     }
 
-    // Rate limit — 30s cooldown
     const now = Date.now();
     if (now - lastSubmitTime.current < SUBMIT_COOLDOWN_MS) {
       const remaining = Math.ceil(
@@ -203,7 +228,6 @@ export default function ContactSection({
       return;
     }
 
-    // Max submissions per session
     if (submitCount.current >= MAX_SUBMITS_PER_SESSION) {
       toast.error(
         "Maximum inquiries reached. Please contact us on WhatsApp for additional requests."
@@ -278,33 +302,28 @@ export default function ContactSection({
       id="contact"
       className="relative overflow-hidden py-16 sm:py-20 lg:py-24 bg-cream-100"
     >
-      {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 opacity-20">
         <div className="absolute -right-60 top-0 h-96 w-96 rounded-full bg-amber-700/10 blur-3xl" />
         <div className="absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-forest-800/10 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
         <div className="mb-12 text-center sm:mb-16">
           <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-amber-700">
-            Get In Touch
+            {settings.subtitle || "Get In Touch"}
           </p>
           <h2
             className="mb-4 text-3xl font-bold text-brown-800 sm:text-4xl lg:text-5xl"
             style={{ fontFamily: "var(--font-heading)" }}
           >
-            Book Your Stay
+            {settings.title || "Book Your Stay"}
           </h2>
           <p className="mx-auto max-w-2xl text-base text-amber-900/70 sm:text-lg">
-            Fill out the form below and our team will get back to you within 24
-            hours to confirm your booking.
+            {settings.description || "Fill out the form below and our team will get back to you within 24 hours to confirm your booking."}
           </p>
         </div>
 
-        {/* Two-column layout */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-12">
-          {/* Form — 2 columns */}
           <div className="lg:col-span-2">
             <form
               onSubmit={handleSubmit}
@@ -312,7 +331,6 @@ export default function ContactSection({
               noValidate
             >
               <div className="relative z-10 grid grid-cols-1 gap-5 sm:grid-cols-2">
-                {/* Honeypot — invisible to humans, bots fill it */}
                 <div
                   aria-hidden="true"
                   className="absolute -left-[9999px] -top-[9999px]"
@@ -327,7 +345,6 @@ export default function ContactSection({
                   />
                 </div>
 
-                {/* Name */}
                 <div>
                   <label
                     htmlFor="name"
@@ -351,7 +368,6 @@ export default function ContactSection({
                   )}
                 </div>
 
-                {/* Number */}
                 <div>
                   <label
                     htmlFor="number"
@@ -377,7 +393,6 @@ export default function ContactSection({
                   )}
                 </div>
 
-                {/* Farmhouse Name */}
                 <div>
                   <label
                     htmlFor="farmhouseName"
@@ -394,7 +409,7 @@ export default function ContactSection({
                     className={`${inputBaseClass} ${errors.farmhouseName ? inputErrorClass : inputNormalClass}`}
                   >
                     <option value="">Select a farmhouse...</option>
-                    {FARMHOUSES.map((farm) => (
+                    {farmhouses.map((farm) => (
                       <option key={farm.id} value={farm.name}>
                         {farm.name}
                       </option>
@@ -407,7 +422,6 @@ export default function ContactSection({
                   )}
                 </div>
 
-                {/* Event Date */}
                 <div>
                   <label
                     htmlFor="eventDate"
@@ -432,7 +446,6 @@ export default function ContactSection({
                   )}
                 </div>
 
-                {/* Slots */}
                 <div>
                   <label
                     htmlFor="slots"
@@ -461,7 +474,6 @@ export default function ContactSection({
                   )}
                 </div>
 
-                {/* Budget */}
                 <div>
                   <label
                     htmlFor="budget"
@@ -487,7 +499,6 @@ export default function ContactSection({
                   )}
                 </div>
 
-                {/* Query — full width */}
                 <div className="sm:col-span-2">
                   <label
                     htmlFor="query"
@@ -520,7 +531,6 @@ export default function ContactSection({
                 </div>
               </div>
 
-              {/* Submit button */}
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -544,9 +554,7 @@ export default function ContactSection({
             </form>
           </div>
 
-          {/* Sidebar — 1 column */}
           <div className="space-y-6">
-            {/* Contact info card */}
             <div className="rounded-3xl border border-white/60 bg-white/40 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:p-8">
               <h3
                 className="mb-5 text-xl font-bold text-brown-800"
@@ -604,7 +612,6 @@ export default function ContactSection({
               </ul>
             </div>
 
-            {/* Operating hours */}
             <div className="rounded-3xl border border-white/60 bg-white/40 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl sm:p-8">
               <h3
                 className="mb-4 text-xl font-bold text-brown-800"
@@ -624,7 +631,6 @@ export default function ContactSection({
               </div>
             </div>
 
-            {/* Map embed */}
             <div className="relative h-64 overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl">
               <iframe
                 src="https://maps.google.com/maps?q=Al+Jannat+farmhouse+booking&t=&z=14&ie=UTF8&iwloc=&output=embed"
