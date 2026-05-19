@@ -89,17 +89,31 @@ export default function PackagesSection({
                   {farm.shortDescription}
                 </p>
 
-                {/* Contact for Pricing */}
+                {/* Pricing */}
                 <div className="mb-4 flex items-center gap-2">
-                  <a
-                    href="https://wa.me/+923332272020"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366]/10 px-3.5 py-1.5 text-sm font-semibold text-[#25D366] transition-all duration-200 hover:bg-[#25D366]/20"
-                  >
-                    <MessageCircle size={14} />
-                    Contact for Pricing
-                  </a>
+                  {farm.pricingEnabled ? (
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-bold text-amber-800" style={{ fontFamily: "var(--font-heading)" }}>
+                        PKR {farm.pricePerNight.toLocaleString()}
+                      </span>
+                      <span className="text-sm text-amber-900/50">/ night</span>
+                      {farm.weekendSurcharge > 0 && (
+                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                          +{farm.weekendSurcharge.toLocaleString()} weekend
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <a
+                      href="https://wa.me/+923332272020"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366]/10 px-3.5 py-1.5 text-sm font-semibold text-[#25D366] transition-all duration-200 hover:bg-[#25D366]/20"
+                    >
+                      <MessageCircle size={14} />
+                      Contact for Pricing
+                    </a>
+                  )}
                 </div>
 
                 {/* Stats row */}
