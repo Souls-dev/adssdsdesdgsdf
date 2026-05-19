@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth-utils";
-import fs from "fs";
-import path from "path";
+import { supabase } from "@/lib/supabase";
 
 async function verifyAdmin(request: NextRequest) {
   const token = request.cookies.get("admin_token")?.value;
@@ -60,27 +59,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create directory if it doesn't exist
-    const dir = path.join(process.cwd(), "public", "farmhouses", safeId);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    // Determine next filename
-    const existingFiles = fs.readdirSync(dir).filter((f) =>
-      /\.(jpg|jpeg|png|webp)$/i.test(f)
-    );
-    const nextNum = existingFiles.length + 1;
+    // Generate unique filename
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const filename = `${nextNum}.${ext}`;
+    const timestamp = Date.now();
+    const filename = `${safeId}/${timestamp}.${ext}`;
 
-    // Write file
+    // Upload to Supabase Storage
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filepath = path.join(dir, filename);
-    fs.writeFileSync(filepath, buffer);
 
-    const publicPath = `/farmhouses/${safeId}/${filename}`;
+    const { error: uploadError } = await supabase.storage
+      .from("farmhouse-images")
+      .upload(filename, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Supabase storage upload error:", uploadError);
+      return NextResponse.json(
+        { error: "Failed to upload image" },
+        { status: 500 }
+      );
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("farmhouse-images")
+      .getPublicUrl(filename);
+
+    const publicPath = urlData.publicUrl;
 
     return NextResponse.json({
       success: true,

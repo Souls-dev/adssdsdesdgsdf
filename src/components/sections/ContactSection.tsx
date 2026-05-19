@@ -79,7 +79,7 @@ export default function ContactSection({
   useEffect(() => {
     async function loadFarmhouses() {
       try {
-        const res = await fetch("/api/admin/farmhouses");
+        const res = await fetch("/api/farmhouses");
         if (res.ok) {
           const data = await res.json();
           if (data.success) {

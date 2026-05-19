@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const settings = readSettings();
+    const settings = await readSettings();
     return NextResponse.json({ success: true, settings });
   } catch (err) {
     return NextResponse.json(
@@ -45,12 +45,12 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const current = readSettings();
+    const current = await readSettings();
 
     // Deep merge incoming body into current settings
     const merged = deepMerge(current, body) as SiteSettings;
     merged.meta.modifiedBy = "admin";
-    writeSettings(merged);
+    await writeSettings(merged);
 
     return NextResponse.json({ success: true, settings: merged });
   } catch (err) {
@@ -69,7 +69,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const defaults = resetSettings();
+    const defaults = await resetSettings();
     return NextResponse.json({ success: true, settings: defaults });
   } catch (err) {
     return NextResponse.json(

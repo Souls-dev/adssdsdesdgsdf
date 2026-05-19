@@ -25,14 +25,14 @@ async function verifyAdmin(request: NextRequest) {
   return true;
 }
 
-// GET — List all farmhouses
+// GET — List all farmhouses (admin sees all)
 export async function GET(request: NextRequest) {
   const isAdmin = await verifyAdmin(request);
   if (!isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const farmhouses = readFarmhouses();
+  const farmhouses = await readFarmhouses();
   return NextResponse.json({ success: true, farmhouses });
 }
 
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    addFarmhouse(farmhouse);
+    await addFarmhouse(farmhouse);
 
     return NextResponse.json(
       { success: true, farmhouse },
@@ -113,7 +113,7 @@ export async function PUT(request: NextRequest) {
     if (updates.bathrooms !== undefined)
       updates.bathrooms = Number(updates.bathrooms);
 
-    const updated = updateFarmhouse(id, updates);
+    const updated = await updateFarmhouse(id, updates);
 
     return NextResponse.json({ success: true, farmhouse: updated });
   } catch (err: unknown) {
@@ -140,7 +140,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    deleteFarmhouse(id);
+    await deleteFarmhouse(id);
 
     return NextResponse.json({ success: true, message: `Deleted ${id}` });
   } catch (err: unknown) {

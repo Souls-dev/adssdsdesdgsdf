@@ -4,7 +4,7 @@ import { readSettings } from "@/lib/site-settings-data";
 // Public GET — no auth required, returns settings for the public website
 export async function GET() {
   try {
-    const settings = readSettings();
+    const settings = await readSettings();
     return NextResponse.json(settings, {
       headers: {
         "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",

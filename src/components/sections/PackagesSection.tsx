@@ -49,11 +49,11 @@ export default function PackagesSection({
   useEffect(() => {
     async function loadFarmhouses() {
       try {
-        const res = await fetch("/api/admin/farmhouses");
+        const res = await fetch("/api/farmhouses");
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            setFarmhouses(data.farmhouses.filter((f: Farmhouse) => f.available));
+            setFarmhouses(data.farmhouses);
           }
         }
       } catch (err) {
