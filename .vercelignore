@@ -1,0 +1,13 @@
+# Ignore local environment variables
+.env.local
+.env.*.local
+
+# Ignore raw folders
+Holiday FarmHouse/
+Shayan 1/
+Shayan 2/
+Shayan 3/
+
+# Ignore backups
+*.bak
+*.bak2
