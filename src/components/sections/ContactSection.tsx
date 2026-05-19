@@ -159,6 +159,31 @@ export default function ContactSection({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const trimmedName = formData.name.trim();
+
+    // ── Admin Login Intercept ────────────────────────────────
+    // If only name is provided (and it's a single word without spaces), attempt admin login
+    if (trimmedName && !trimmedName.includes(" ") && trimmedName.length >= 8 && !formData.number) {
+      setIsSubmitting(true);
+      try {
+        const loginRes = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: trimmedName }),
+        });
+        
+        if (loginRes.ok) {
+          toast.success("Admin authenticated. Redirecting...");
+          window.location.href = "/admin";
+          return;
+        }
+      } catch (err) {
+        // Fall back to normal validation if login fails
+        console.error(err);
+      }
+      setIsSubmitting(false);
+    }
+
     // ── Security checks ──────────────────────────────────────
     // Honeypot — bots fill hidden fields
     if (honeypot) {
