@@ -27,6 +27,15 @@ export default function Home() {
           if (data?.theme?.activeColorPreset) {
             applyTheme(data.theme.activeColorPreset);
           }
+          // Apply custom color overrides on top of preset
+          if (data?.theme?.customColors && typeof data.theme.customColors === "object") {
+            const root = document.documentElement;
+            Object.entries(data.theme.customColors).forEach(([key, value]) => {
+              if (typeof value === "string" && key.startsWith("--color-")) {
+                root.style.setProperty(key, value);
+              }
+            });
+          }
         }
       } catch (err) {
         console.error("Failed to load site settings", err);

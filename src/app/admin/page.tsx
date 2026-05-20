@@ -971,7 +971,7 @@ export default function AdminPage() {
                 <li>When an admin key is used for the first time, it is permanently bound to that device.</li>
                 <li>If someone tries to use the same key from a different browser/device, they will be blocked.</li>
                 <li>To move a key to a new device, revoke the old binding first, then login from the new device.</li>
-                <li>Login is rate-limited to 5 attempts per 15 minutes per IP address.</li>
+                <li>Use different keys for different devices (desktop, mobile, etc.).</li>
               </ul>
             </div>
           </div>
