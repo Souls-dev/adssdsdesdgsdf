@@ -4,18 +4,32 @@ import {
   readSettings,
   writeSettings,
   resetSettings,
+  readPreviewTheme,
+  setPreviewTheme,
+  clearPreviewTheme,
+  makePreviewPermanent,
   SiteSettings,
 } from "@/lib/site-settings-data";
+import { rateLimit } from "@/lib/rateLimit";
 
 async function verifyAdmin(request: NextRequest) {
   const token = request.cookies.get("admin_token")?.value;
   if (!token) return false;
   try {
-    await verifyToken(token);
+    const payload = await verifyToken(token);
+    if (!payload) return false;
     return true;
   } catch {
     return false;
   }
+}
+
+function getIp(request: NextRequest) {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown"
+  );
 }
 
 // GET — return current settings
@@ -25,9 +39,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const limiter = rateLimit(getIp(request), "admin-api");
+  if (!limiter.allowed) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+  }
+
   try {
     const settings = await readSettings();
-    return NextResponse.json({ success: true, settings });
+    const preview = await readPreviewTheme();
+    return NextResponse.json({ success: true, settings, preview });
   } catch (err) {
     return NextResponse.json(
       { error: "Failed to read settings", detail: String(err) },
@@ -36,11 +56,16 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PUT — update settings (partial merge)
+// PUT — update settings (partial merge, permanent save)
 export async function PUT(request: NextRequest) {
   const isAdmin = await verifyAdmin(request);
   if (!isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const limiter = rateLimit(getIp(request), "admin-api");
+  if (!limiter.allowed) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }
 
   try {
@@ -61,6 +86,57 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+// PATCH — theme preview operations
+export async function PATCH(request: NextRequest) {
+  const isAdmin = await verifyAdmin(request);
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const limiter = rateLimit(getIp(request), "admin-api");
+  if (!limiter.allowed) {
+    return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+  }
+
+  try {
+    const body = await request.json();
+    const { action } = body;
+
+    if (action === "preview") {
+      // Start a temporary preview
+      const { preset, customColors, durationMinutes } = body;
+      if (!preset) {
+        return NextResponse.json({ error: "Preset is required" }, { status: 400 });
+      }
+      const preview = await setPreviewTheme(
+        preset,
+        customColors || {},
+        durationMinutes || 5
+      );
+      return NextResponse.json({ success: true, preview });
+    }
+
+    if (action === "make-permanent") {
+      // Confirm and make the preview permanent
+      const settings = await makePreviewPermanent();
+      return NextResponse.json({ success: true, settings, message: "Theme is now permanent!" });
+    }
+
+    if (action === "revert") {
+      // Clear the preview immediately
+      await clearPreviewTheme();
+      return NextResponse.json({ success: true, message: "Preview reverted to permanent theme" });
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Failed to process preview action", detail: String(err) },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE — reset to factory defaults
 export async function DELETE(request: NextRequest) {
   const isAdmin = await verifyAdmin(request);
@@ -70,6 +146,7 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const defaults = await resetSettings();
+    await clearPreviewTheme();
     return NextResponse.json({ success: true, settings: defaults });
   } catch (err) {
     return NextResponse.json(

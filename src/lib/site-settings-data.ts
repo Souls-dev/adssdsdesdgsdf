@@ -183,3 +183,73 @@ export async function resetSettings(): Promise<SiteSettings> {
   await writeSettings(defaults);
   return defaults;
 }
+
+// ── Preview Theme ────────────────────────────────────────────
+
+export type PreviewTheme = {
+  preset: string;
+  customColors: Record<string, string>;
+  expiresAt: string; // ISO timestamp
+};
+
+/** Read active preview theme (returns null if expired or not set) */
+export async function readPreviewTheme(): Promise<PreviewTheme | null> {
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("preview_theme")
+    .eq("id", "default")
+    .single();
+
+  if (error || !data || !data.preview_theme) return null;
+
+  const preview = data.preview_theme as PreviewTheme;
+  // Check expiry
+  if (new Date(preview.expiresAt) < new Date()) {
+    // Expired — clear it
+    await clearPreviewTheme();
+    return null;
+  }
+  return preview;
+}
+
+/** Set a temporary preview theme (with expiry in minutes) */
+export async function setPreviewTheme(
+  preset: string,
+  customColors: Record<string, string>,
+  durationMinutes: number = 5
+): Promise<PreviewTheme> {
+  const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000).toISOString();
+  const preview: PreviewTheme = { preset, customColors, expiresAt };
+
+  const { error } = await supabase
+    .from("site_settings")
+    .update({ preview_theme: preview })
+    .eq("id", "default");
+
+  if (error) throw new Error(error.message);
+  return preview;
+}
+
+/** Clear the preview theme (revert to permanent) */
+export async function clearPreviewTheme(): Promise<void> {
+  const { error } = await supabase
+    .from("site_settings")
+    .update({ preview_theme: null })
+    .eq("id", "default");
+
+  if (error) throw new Error(error.message);
+}
+
+/** Make the current preview theme permanent */
+export async function makePreviewPermanent(): Promise<SiteSettings> {
+  const preview = await readPreviewTheme();
+  if (!preview) throw new Error("No active preview theme to make permanent");
+
+  const settings = await readSettings();
+  settings.theme.activeColorPreset = preview.preset;
+  settings.theme.customColors = preview.customColors;
+  settings.meta.modifiedBy = "admin-theme-confirm";
+  await writeSettings(settings);
+  await clearPreviewTheme();
+  return settings;
+}

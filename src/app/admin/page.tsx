@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Trash2, Edit, Plus, LogOut, Save, X, Upload, ToggleLeft, ToggleRight, ChevronDown, ChevronUp, Palette, Home, Shield, Type } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Trash2, Edit, Plus, LogOut, Save, X, Upload, ToggleLeft, ToggleRight, ChevronDown, ChevronUp, Palette, Home, Shield, Type, Fingerprint, Clock, Check, AlertTriangle } from "lucide-react";
+import { COLOR_THEMES, DEFAULT_CSS_VARS, type ColorTheme, type ColorOverrides } from "@/lib/theme-utils";
 
 type Farmhouse = {
   id: string;
@@ -21,6 +22,15 @@ type Farmhouse = {
   pricingEnabled?: boolean;
 };
 
+type DeviceBinding = {
+  id: string;
+  admin_key_hash: string;
+  device_id: string;
+  bound_at: string;
+  last_used: string;
+  user_agent: string;
+};
+
 const EMPTY_FARMHOUSE: Farmhouse = {
   id: "", name: "", location: "Karachi, Sindh, Pakistan",
   shortDescription: "", fullDescription: "",
@@ -30,8 +40,16 @@ const EMPTY_FARMHOUSE: Farmhouse = {
   available: true, pricingEnabled: false,
 };
 
+// Editable CSS variable groups for the color customizer
+const COLOR_GROUPS = [
+  { label: "Primary", vars: ["--color-primary", "--color-primary-hover", "--color-primary-light"] },
+  { label: "Surface", vars: ["--color-surface", "--color-surface-warm", "--color-surface-alt"] },
+  { label: "Text", vars: ["--color-text-primary", "--color-text-secondary", "--color-text-light"] },
+  { label: "Accent", vars: ["--color-amber-500", "--color-amber-600", "--color-amber-700"] },
+];
+
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<"farmhouses" | "theme" | "hero" | "content">("farmhouses");
+  const [activeTab, setActiveTab] = useState<"farmhouses" | "theme" | "hero" | "content" | "security">("farmhouses");
   const [farmhouses, setFarmhouses] = useState<Farmhouse[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +67,18 @@ export default function AdminPage() {
   // Settings saving state
   const [savingSettings, setSavingSettings] = useState(false);
 
+  // Device bindings state
+  const [deviceBindings, setDeviceBindings] = useState<DeviceBinding[]>([]);
+
+  // Theme preview state
+  const [previewActive, setPreviewActive] = useState(false);
+  const [previewExpiry, setPreviewExpiry] = useState<string | null>(null);
+  const [previewCountdown, setPreviewCountdown] = useState("");
+  const [selectedPreset, setSelectedPreset] = useState<string>("gold");
+  const [customColors, setCustomColors] = useState<Record<string, string>>({});
+  const [confirmPermanent, setConfirmPermanent] = useState(false);
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -59,7 +89,22 @@ export default function AdminPage() {
 
       const resSettings = await fetch("/api/admin/settings");
       const dataSettings = await resSettings.json();
-      if (dataSettings.success) setSettings(dataSettings.settings);
+      if (dataSettings.success) {
+        setSettings(dataSettings.settings);
+        setSelectedPreset(dataSettings.settings.theme?.activeColorPreset || "gold");
+        setCustomColors(dataSettings.settings.theme?.customColors || {});
+        if (dataSettings.preview) {
+          setPreviewActive(true);
+          setPreviewExpiry(dataSettings.preview.expiresAt);
+        }
+      }
+
+      // Load device bindings
+      const resBindings = await fetch("/api/admin/device-bindings");
+      if (resBindings.ok) {
+        const dataBindings = await resBindings.json();
+        if (dataBindings.success) setDeviceBindings(dataBindings.bindings);
+      }
     } catch {
       showMsg("Failed to load data", "error");
     } finally {
@@ -71,6 +116,31 @@ export default function AdminPage() {
     fetchData();
   }, [fetchData]);
 
+  // Countdown timer for preview
+  useEffect(() => {
+    if (!previewExpiry) {
+      setPreviewCountdown("");
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      return;
+    }
+    const updateCountdown = () => {
+      const diff = new Date(previewExpiry).getTime() - Date.now();
+      if (diff <= 0) {
+        setPreviewActive(false);
+        setPreviewExpiry(null);
+        setPreviewCountdown("");
+        showMsg("Preview expired — reverted to permanent theme", "success");
+        return;
+      }
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      setPreviewCountdown(`${mins}:${secs.toString().padStart(2, "0")}`);
+    };
+    updateCountdown();
+    countdownRef.current = setInterval(updateCountdown, 1000);
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, [previewExpiry]);
+
   const showMsg = (text: string, type: "success" | "error" = "success") => {
     setMsg(text);
     setMsgType(type);
@@ -80,6 +150,74 @@ export default function AdminPage() {
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     window.location.href = "/";
+  };
+
+  // ── DEVICE BINDING ─────────────────────────────────────────
+  const handleRevokeBinding = async (bindingId: string) => {
+    if (!confirm("Revoke this device binding? The key can then be used on a new device.")) return;
+    try {
+      const res = await fetch("/api/admin/device-bindings", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: bindingId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showMsg("Device binding revoked!", "success");
+        setDeviceBindings((prev) => prev.filter((b) => b.id !== bindingId));
+      } else { showMsg(data.error || "Failed to revoke", "error"); }
+    } catch { showMsg("Network error", "error"); }
+  };
+
+  // ── THEME PREVIEW ──────────────────────────────────────────
+  const handleApplyPreview = async () => {
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "preview", preset: selectedPreset, customColors, durationMinutes: 5 }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPreviewActive(true);
+        setPreviewExpiry(data.preview.expiresAt);
+        showMsg("Preview active! Theme will auto-revert in 5 minutes.", "success");
+      } else { showMsg(data.error || "Failed to apply preview", "error"); }
+    } catch { showMsg("Network error", "error"); }
+  };
+
+  const handleMakePermanent = async () => {
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "make-permanent" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPreviewActive(false);
+        setPreviewExpiry(null);
+        setConfirmPermanent(false);
+        setSettings(data.settings);
+        showMsg("Theme is now PERMANENT on the website!", "success");
+      } else { showMsg(data.error || "Failed", "error"); }
+    } catch { showMsg("Network error", "error"); }
+  };
+
+  const handleRevertPreview = async () => {
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "revert" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPreviewActive(false);
+        setPreviewExpiry(null);
+        showMsg("Reverted to permanent theme", "success");
+      }
+    } catch { showMsg("Network error", "error"); }
   };
 
   // ── FARMHOUSE CRUD ──────────────────────────────────────────
@@ -234,6 +372,10 @@ export default function AdminPage() {
           <button onClick={() => { setActiveTab("content"); setEditingFarmhouse(null); }}
             className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === "content" ? "border-amber-500 text-amber-400" : "border-transparent text-zinc-400 hover:text-zinc-200"}`}>
             <Type size={16} /> Page Content
+          </button>
+          <button onClick={() => { setActiveTab("security"); setEditingFarmhouse(null); }}
+            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === "security" ? "border-amber-500 text-amber-400" : "border-transparent text-zinc-400 hover:text-zinc-200"}`}>
+            <Fingerprint size={16} /> Security
           </button>
         </div>
       </div>
@@ -428,45 +570,111 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── TAB 2: THEME ────────────────────────────────────── */}
+        {/* ── TAB 2: THEME (Color Customizer) ─────────────────── */}
         {activeTab === "theme" && settings && (
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-6">
-            <h2 className="text-lg font-bold text-amber-400 mb-4">Website Colors & Layouts</h2>
+          <div className="space-y-6">
+            {/* Preview Status Banner */}
+            {previewActive && (
+              <div className="rounded-2xl border-2 border-amber-500/50 bg-amber-950/30 p-4 flex items-center justify-between animate-pulse-slow">
+                <div className="flex items-center gap-3">
+                  <Clock size={20} className="text-amber-400" />
+                  <div>
+                    <p className="text-sm font-bold text-amber-300">🔴 LIVE PREVIEW ACTIVE</p>
+                    <p className="text-xs text-amber-400/80">Theme is temporarily live on the website. Auto-reverts in <span className="font-mono font-bold">{previewCountdown}</span></p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setConfirmPermanent(true)}
+                    className="flex items-center gap-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-500">
+                    <Check size={14} /> Make This Theme Permanent
+                  </button>
+                  <button onClick={handleRevertPreview}
+                    className="rounded-lg bg-zinc-700 px-4 py-2 text-sm text-zinc-300 transition hover:bg-zinc-600">
+                    Revert Now
+                  </button>
+                </div>
+              </div>
+            )}
 
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Color Preset */}
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-6">
+              <h2 className="text-lg font-bold text-amber-400 mb-2">🎨 Color Customizer</h2>
+              <p className="text-xs text-zinc-500 -mt-4">Choose a preset or customize individual colors. Preview changes temporarily before making them permanent.</p>
+
+              {/* Preset Theme Swatches */}
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-400">Color Palette Preset</label>
-                <select value={settings.theme.activeColorPreset} onChange={(e) => setSettings({ ...settings, theme: { ...settings.theme, activeColorPreset: e.target.value } })}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-amber-500 focus:outline-none">
-                  <option value="gold">Gold (Default Classic)</option>
-                  <option value="green">Green (Nature & Fresh)</option>
-                  <option value="red">Red (Royal Vibrant)</option>
-                  <option value="blue">Blue (Calm Ocean)</option>
-                  <option value="yellow">Yellow (Golden Bright)</option>
-                  <option value="logo">Logo Theme (Agency Custom)</option>
-                </select>
-                <p className="mt-1 text-xs text-zinc-500">Selecting a preset automatically updates all main colors throughout the public website pages.</p>
+                <label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-zinc-400">Theme Presets</label>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                  {(Object.entries(COLOR_THEMES) as [string, { label: string; overrides: ColorOverrides }][]).map(([key, theme]) => {
+                    const primary = theme.overrides["--color-primary"] || DEFAULT_CSS_VARS["--color-primary"];
+                    const surface = theme.overrides["--color-surface"] || DEFAULT_CSS_VARS["--color-surface"];
+                    const accent = theme.overrides["--color-amber-500"] || DEFAULT_CSS_VARS["--color-amber-500"];
+                    return (
+                      <button key={key} onClick={() => { setSelectedPreset(key); setCustomColors(theme.overrides); }}
+                        className={`rounded-xl border-2 p-3 transition hover:scale-105 ${selectedPreset === key ? "border-amber-400 ring-2 ring-amber-400/30" : "border-zinc-700 hover:border-zinc-500"}`}>
+                        <div className="flex gap-1 mb-2">
+                          <div className="h-6 w-6 rounded-full border border-black/20" style={{ background: primary }} />
+                          <div className="h-6 w-6 rounded-full border border-black/20" style={{ background: accent }} />
+                          <div className="h-6 w-6 rounded-full border border-black/20" style={{ background: surface }} />
+                        </div>
+                        <p className="text-xs font-medium text-zinc-300">{theme.label}</p>
+                        {selectedPreset === key && <p className="text-[9px] text-amber-400 mt-0.5">Selected</p>}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Hero Theme Selection */}
+              {/* Custom Color Pickers */}
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-400">Hero Section Theme</label>
+                <label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-zinc-400">Fine-Tune Colors</label>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {COLOR_GROUPS.map((group) => (
+                    <div key={group.label} className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-3">
+                      <h4 className="text-xs font-bold text-zinc-300 mb-2">{group.label}</h4>
+                      {group.vars.map((v) => {
+                        const currentVal = customColors[v] || DEFAULT_CSS_VARS[v] || "#888888";
+                        return (
+                          <div key={v} className="flex items-center gap-2 mb-1.5">
+                            <input type="color" value={currentVal}
+                              onChange={(e) => setCustomColors({ ...customColors, [v]: e.target.value })}
+                              className="h-7 w-7 cursor-pointer rounded border border-zinc-600 bg-transparent" />
+                            <span className="text-[10px] text-zinc-500 truncate flex-1">{v.replace("--color-", "")}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Hero Theme Selection (kept) */}
+              <div className="border-t border-zinc-800 pt-4">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-400">Hero Section Layout</label>
                 <select value={settings.theme.heroTheme} onChange={(e) => setSettings({ ...settings, theme: { ...settings.theme, heroTheme: e.target.value } })}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-amber-500 focus:outline-none">
-                  <option value="theme1">Theme 1: Video Placeholder (Promo Coming Soon)</option>
+                  className="w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-amber-500 focus:outline-none">
+                  <option value="theme1">Theme 1: Video Placeholder</option>
                   <option value="theme2">Theme 2: Classic Dynamic Gradients</option>
-                  <option value="theme3">Theme 3: Auto-Sliding Photography Slides</option>
+                  <option value="theme3">Theme 3: Auto-Sliding Photography</option>
                 </select>
-                <p className="mt-1 text-xs text-zinc-500">Choose the presentation layout type for the home page header hero banner.</p>
               </div>
-            </div>
 
-            <div className="border-t border-zinc-800 pt-6">
-              <button onClick={() => handleSaveSettings(settings)} disabled={savingSettings}
-                className="flex items-center gap-2 rounded-lg bg-amber-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-500 disabled:opacity-50">
-                <Save size={16} /> {savingSettings ? "Saving Theme..." : "Save Theme Settings"}
-              </button>
+              {/* Action Buttons */}
+              <div className="border-t border-zinc-800 pt-6 flex flex-wrap gap-3">
+                <button onClick={handleApplyPreview}
+                  className="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500">
+                  <Clock size={16} /> Apply 5-Minute Preview
+                </button>
+                {previewActive && (
+                  <button onClick={() => setConfirmPermanent(true)}
+                    className="flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500">
+                    <Check size={16} /> Make This Theme Permanent
+                  </button>
+                )}
+                <button onClick={() => { handleSaveSettings({ ...settings, theme: { ...settings.theme, heroTheme: settings.theme.heroTheme } }); }} disabled={savingSettings}
+                  className="flex items-center gap-2 rounded-lg bg-amber-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-500 disabled:opacity-50">
+                  <Save size={16} /> {savingSettings ? "Saving..." : "Save Hero Layout"}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -721,6 +929,53 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* ── TAB 5: SECURITY ──────────────────────────────────── */}
+        {activeTab === "security" && (
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-6">
+            <h2 className="text-lg font-bold text-amber-400 mb-2">🔒 Device Security & Key Bindings</h2>
+            <p className="text-xs text-zinc-500 -mt-4">Each admin key is locked to one device on first use. Revoke a binding to allow re-binding to a new device.</p>
+
+            {deviceBindings.length === 0 ? (
+              <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-8 text-center">
+                <Fingerprint size={32} className="mx-auto text-zinc-600 mb-2" />
+                <p className="text-sm text-zinc-500">No device bindings found yet. Keys bind automatically on first login.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {deviceBindings.map((b) => (
+                  <div key={b.id} className="flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Fingerprint size={14} className="text-amber-400" />
+                        <span className="text-sm font-mono text-zinc-300">Key: {b.admin_key_hash}</span>
+                      </div>
+                      <p className="text-xs text-zinc-500 truncate">Device: {b.user_agent}</p>
+                      <div className="flex gap-4 mt-1 text-[10px] text-zinc-600">
+                        <span>Bound: {new Date(b.bound_at).toLocaleDateString()}</span>
+                        <span>Last used: {new Date(b.last_used).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <button onClick={() => handleRevokeBinding(b.id)}
+                      className="ml-3 rounded-lg bg-red-950/50 border border-red-800 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-900/30">
+                      Revoke
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="rounded-xl border border-zinc-700 bg-zinc-800/30 p-4">
+              <h3 className="text-sm font-semibold text-zinc-300 mb-2">ℹ️ How It Works</h3>
+              <ul className="text-xs text-zinc-500 space-y-1 list-disc list-inside">
+                <li>When an admin key is used for the first time, it is permanently bound to that device.</li>
+                <li>If someone tries to use the same key from a different browser/device, they will be blocked.</li>
+                <li>To move a key to a new device, revoke the old binding first, then login from the new device.</li>
+                <li>Login is rate-limited to 5 attempts per 15 minutes per IP address.</li>
+              </ul>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Delete Confirmation Modal */}
@@ -736,6 +991,25 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* Make Theme Permanent Confirmation Modal */}
+      {confirmPermanent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle size={24} className="text-amber-400" />
+              <h3 className="text-lg font-bold text-white">Make Theme Permanent?</h3>
+            </div>
+            <p className="mb-2 text-sm text-zinc-400">Are you sure you want to permanently apply this theme to the website?</p>
+            <p className="mb-6 text-xs text-zinc-500">This will replace the current permanent theme. You can always change it later from the Theme tab or reset to defaults.</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setConfirmPermanent(false)} className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700">Cancel</button>
+              <button onClick={handleMakePermanent} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-500">Yes, Make Permanent</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
