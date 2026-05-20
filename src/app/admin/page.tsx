@@ -42,10 +42,13 @@ const EMPTY_FARMHOUSE: Farmhouse = {
 
 // Editable CSS variable groups for the color customizer
 const COLOR_GROUPS = [
-  { label: "Primary", vars: ["--color-primary", "--color-primary-hover", "--color-primary-light"] },
-  { label: "Surface", vars: ["--color-surface", "--color-surface-warm", "--color-surface-alt"] },
-  { label: "Text", vars: ["--color-text-primary", "--color-text-secondary", "--color-text-light"] },
-  { label: "Accent", vars: ["--color-amber-500", "--color-amber-600", "--color-amber-700"] },
+  { label: "🎨 Primary", desc: "Buttons, links, highlights", vars: ["--color-primary", "--color-primary-hover", "--color-primary-light"] },
+  { label: "📄 Backgrounds", desc: "Section backgrounds", vars: ["--color-cream-50", "--color-cream-100", "--color-cream-200", "--color-cream-300"] },
+  { label: "🖼️ Surfaces", desc: "Cards, panels", vars: ["--color-surface", "--color-surface-warm", "--color-surface-alt"] },
+  { label: "🌙 Dark Areas", desc: "Header, footer, navbar", vars: ["--color-brown-800", "--color-brown-850", "--color-brown-900", "--color-brown-950"] },
+  { label: "🌲 Dark Accents", desc: "Dark section gradients", vars: ["--color-forest-600", "--color-forest-700", "--color-forest-750", "--color-forest-800", "--color-forest-900", "--color-forest-950"] },
+  { label: "✨ Accent", desc: "Amber/gold highlights", vars: ["--color-amber-500", "--color-amber-600", "--color-amber-700", "--color-amber-800", "--color-amber-900"] },
+  { label: "📝 Text", desc: "Headings, body, light text", vars: ["--color-text-primary", "--color-text-secondary", "--color-text-light"] },
 ];
 
 export default function AdminPage() {
@@ -627,10 +630,11 @@ export default function AdminPage() {
               {/* Custom Color Pickers */}
               <div>
                 <label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-zinc-400">Fine-Tune Colors</label>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {COLOR_GROUPS.map((group) => (
                     <div key={group.label} className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-3">
-                      <h4 className="text-xs font-bold text-zinc-300 mb-2">{group.label}</h4>
+                      <h4 className="text-xs font-bold text-zinc-300 mb-0.5">{group.label}</h4>
+                      <p className="text-[10px] text-zinc-600 mb-2">{group.desc}</p>
                       {group.vars.map((v) => {
                         const currentVal = customColors[v] || DEFAULT_CSS_VARS[v] || "#888888";
                         return (
