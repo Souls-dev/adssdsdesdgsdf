@@ -59,6 +59,12 @@ export default function AdminPage() {
   const [msg, setMsg] = useState("");
   const [msgType, setMsgType] = useState<"success" | "error">("success");
 
+  // Authentication states
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [loginKey, setLoginKey] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
+
   // Farmhouse states
   const [editingFarmhouse, setEditingFarmhouse] = useState<Farmhouse | null>(null);
   const [isNewFarmhouse, setIsNewFarmhouse] = useState(false);
@@ -86,9 +92,16 @@ export default function AdminPage() {
     try {
       setLoading(true);
       const resFarm = await fetch("/api/admin/farmhouses");
-      if (resFarm.status === 401) { window.location.href = "/"; return; }
+      if (resFarm.status === 401) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
       const dataFarm = await resFarm.json();
-      if (dataFarm.success) setFarmhouses(dataFarm.farmhouses);
+      if (dataFarm.success) {
+        setFarmhouses(dataFarm.farmhouses);
+        setIsAuthenticated(true);
+      }
 
       const resSettings = await fetch("/api/admin/settings");
       const dataSettings = await resSettings.json();
@@ -150,9 +163,38 @@ export default function AdminPage() {
     setTimeout(() => setMsg(""), 5000);
   };
 
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginKey.trim()) {
+      setLoginError("Please enter your admin security key.");
+      return;
+    }
+    setLoggingIn(true);
+    setLoginError("");
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: loginKey.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsAuthenticated(true);
+        fetchData();
+      } else {
+        setLoginError(data.message || "Invalid credentials.");
+      }
+    } catch {
+      setLoginError("A network error occurred. Please try again.");
+    } finally {
+      setLoggingIn(false);
+    }
+  };
+
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/";
+    setIsAuthenticated(false);
+    window.location.reload();
   };
 
   // ── DEVICE BINDING ─────────────────────────────────────────
@@ -328,6 +370,50 @@ export default function AdminPage() {
       <div className="animate-pulse text-lg">Loading Al Jannat CMS Dashboard...</div>
     </div>
   );
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+        <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 shadow-2xl backdrop-blur-md">
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-amber-950/50 border border-amber-500/30 text-amber-500">
+              <Shield size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-white">Al Jannat Admin Access</h2>
+            <p className="text-xs text-zinc-500 mt-1">Enter your admin security key to access the dashboard</p>
+          </div>
+
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-zinc-400">Security Key</label>
+              <input
+                type="password"
+                value={loginKey}
+                onChange={(e) => setLoginKey(e.target.value)}
+                placeholder="••••••••••••••••"
+                disabled={loggingIn}
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
+              />
+            </div>
+
+            {loginError && (
+              <div className="rounded-lg bg-red-950/50 border border-red-800 p-3 text-xs text-red-400">
+                ⚠️ {loginError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loggingIn}
+              className="w-full rounded-lg bg-amber-600 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-500 disabled:opacity-50"
+            >
+              {loggingIn ? "Verifying..." : "Unlock Dashboard"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
