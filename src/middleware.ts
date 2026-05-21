@@ -10,17 +10,21 @@ function getSecretKey() {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── Protect /admin routes ──────────────────────────────────
-  if (pathname.startsWith("/admin")) {
+  // ── Protect /api/admin routes (except login & logout) ──────
+  if (
+    pathname.startsWith("/api/admin") &&
+    !pathname.startsWith("/api/admin/login") &&
+    !pathname.startsWith("/api/admin/logout")
+  ) {
     const token = request.cookies.get("admin_token")?.value;
 
     if (!token) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const key = getSecretKey();
     if (!key) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.json({ error: "Server config error" }, { status: 500 });
     }
 
     try {
@@ -33,22 +37,20 @@ export async function middleware(request: NextRequest) {
         "unknown";
 
       if (payload.ip && payload.ip !== ip) {
-        // IP mismatch — reject
-        const response = NextResponse.redirect(new URL("/", request.url));
+        const response = NextResponse.json({ error: "Session expired" }, { status: 401 });
         response.cookies.delete("admin_token");
         return response;
       }
 
       return NextResponse.next();
     } catch {
-      // Invalid token
-      const response = NextResponse.redirect(new URL("/", request.url));
+      const response = NextResponse.json({ error: "Invalid token" }, { status: 401 });
       response.cookies.delete("admin_token");
       return response;
     }
   }
 
-  // ── CORS for API routes ────────────────────────────────────
+  // ── CORS for all API routes ────────────────────────────────
   if (pathname.startsWith("/api")) {
     if (request.method === "OPTIONS") {
       return new NextResponse(null, {
@@ -64,14 +66,8 @@ export async function middleware(request: NextRequest) {
 
     const response = NextResponse.next();
     response.headers.set("Access-Control-Allow-Origin", "*");
-    response.headers.set(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, OPTIONS"
-    );
-    response.headers.set(
-      "Access-Control-Allow-Headers",
-      "Content-Type, x-api-key"
-    );
+    response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    response.headers.set("Access-Control-Allow-Headers", "Content-Type, x-api-key");
     return response;
   }
 
@@ -81,3 +77,4 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/api/:path*", "/admin/:path*"],
 };
+
