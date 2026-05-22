@@ -45,8 +45,9 @@ export async function POST(request: NextRequest) {
     // 2. Determine role: master key (env var) or admin key (Supabase table)
     let role: "master" | "admin" | null = null;
 
-    const masterKey = process.env.MASTER_KEY;
-    if (masterKey && key === masterKey) {
+    const masterKeysStr = process.env.MASTER_KEYS || process.env.MASTER_KEY || "";
+    const masterKeys = masterKeysStr.split(",").map((k) => k.trim()).filter(Boolean);
+    if (masterKeys.includes(key)) {
       role = "master";
     }
 
