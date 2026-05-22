@@ -12,15 +12,15 @@ import {
 } from "@/lib/site-settings-data";
 import { rateLimit } from "@/lib/rateLimit";
 
-async function verifyAdmin(request: NextRequest) {
+async function verifyAdmin(request: NextRequest): Promise<{ authenticated: boolean; role?: string }> {
   const token = request.cookies.get("admin_token")?.value;
-  if (!token) return false;
+  if (!token) return { authenticated: false };
   try {
     const payload = await verifyToken(token);
-    if (!payload) return false;
-    return true;
+    if (!payload) return { authenticated: false };
+    return { authenticated: true, role: (payload.role as string) || "admin" };
   } catch {
-    return false;
+    return { authenticated: false };
   }
 }
 
@@ -34,8 +34,8 @@ function getIp(request: NextRequest) {
 
 // GET — return current settings
 export async function GET(request: NextRequest) {
-  const isAdmin = await verifyAdmin(request);
-  if (!isAdmin) {
+  const auth = await verifyAdmin(request);
+  if (!auth.authenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
   try {
     const settings = await readSettings();
     const preview = await readPreviewTheme();
-    return NextResponse.json({ success: true, settings, preview });
+    return NextResponse.json({ success: true, settings, preview, role: auth.role });
   } catch (err) {
     return NextResponse.json(
       { error: "Failed to read settings", detail: String(err) },
@@ -58,8 +58,8 @@ export async function GET(request: NextRequest) {
 
 // PUT — update settings (partial merge, permanent save)
 export async function PUT(request: NextRequest) {
-  const isAdmin = await verifyAdmin(request);
-  if (!isAdmin) {
+  const auth = await verifyAdmin(request);
+  if (!auth.authenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -88,8 +88,8 @@ export async function PUT(request: NextRequest) {
 
 // PATCH — theme preview operations
 export async function PATCH(request: NextRequest) {
-  const isAdmin = await verifyAdmin(request);
-  if (!isAdmin) {
+  const auth = await verifyAdmin(request);
+  if (!auth.authenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -139,8 +139,8 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE — reset to factory defaults
 export async function DELETE(request: NextRequest) {
-  const isAdmin = await verifyAdmin(request);
-  if (!isAdmin) {
+  const auth = await verifyAdmin(request);
+  if (!auth.authenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

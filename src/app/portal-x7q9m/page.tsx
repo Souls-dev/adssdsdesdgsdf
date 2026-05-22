@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Trash2, Edit, Plus, LogOut, Save, X, Upload, ToggleLeft, ToggleRight, ChevronDown, ChevronUp, Palette, Home, Shield, Type, Fingerprint, Clock, Check, AlertTriangle } from "lucide-react";
+import { Trash2, Edit, Plus, LogOut, Save, X, Upload, ToggleLeft, ToggleRight, ChevronDown, ChevronUp, Palette, Home, Shield, Type, Fingerprint, Clock, Check, AlertTriangle, Key, Copy } from "lucide-react";
 import { COLOR_THEMES, DEFAULT_CSS_VARS, type ColorTheme, type ColorOverrides } from "@/lib/theme-utils";
 
 type Farmhouse = {
@@ -79,6 +79,15 @@ export default function AdminPage() {
   // Device bindings state
   const [deviceBindings, setDeviceBindings] = useState<DeviceBinding[]>([]);
 
+  // Role-based access
+  const [userRole, setUserRole] = useState<"master" | "admin">("admin");
+
+  // Admin keys management (master only)
+  const [adminKeys, setAdminKeys] = useState<any[]>([]);
+  const [newKeyLabel, setNewKeyLabel] = useState("");
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [generatingKey, setGeneratingKey] = useState(false);
+
   // Theme preview state
   const [previewActive, setPreviewActive] = useState(false);
   const [previewExpiry, setPreviewExpiry] = useState<string | null>(null);
@@ -113,6 +122,10 @@ export default function AdminPage() {
           setPreviewActive(true);
           setPreviewExpiry(dataSettings.preview.expiresAt);
         }
+        // Set user role from API
+        if (dataSettings.role) {
+          setUserRole(dataSettings.role);
+        }
       }
 
       // Load device bindings
@@ -120,6 +133,13 @@ export default function AdminPage() {
       if (resBindings.ok) {
         const dataBindings = await resBindings.json();
         if (dataBindings.success) setDeviceBindings(dataBindings.bindings);
+      }
+
+      // Load admin keys (master only — will 403 for admins)
+      const resKeys = await fetch("/api/admin/keys");
+      if (resKeys.ok) {
+        const dataKeys = await resKeys.json();
+        if (dataKeys.success) setAdminKeys(dataKeys.keys);
       }
     } catch {
       showMsg("Failed to load data", "error");
@@ -211,6 +231,56 @@ export default function AdminPage() {
         showMsg("Device binding revoked!", "success");
         setDeviceBindings((prev) => prev.filter((b) => b.id !== bindingId));
       } else { showMsg(data.error || "Failed to revoke", "error"); }
+    } catch { showMsg("Network error", "error"); }
+  };
+
+  // ── KEY MANAGEMENT (Master only) ──────────────────────────────
+  const handleGenerateKey = async () => {
+    if (!newKeyLabel.trim()) { showMsg("Enter a label for the key", "error"); return; }
+    setGeneratingKey(true);
+    try {
+      const res = await fetch("/api/admin/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label: newKeyLabel.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGeneratedKey(data.key);
+        setNewKeyLabel("");
+        // Refresh key list
+        const resKeys = await fetch("/api/admin/keys");
+        if (resKeys.ok) {
+          const dataKeys = await resKeys.json();
+          if (dataKeys.success) setAdminKeys(dataKeys.keys);
+        }
+        showMsg("Key generated! Copy it now — it won't be shown again.", "success");
+      } else { showMsg(data.error || "Failed to generate key", "error"); }
+    } catch { showMsg("Network error", "error"); }
+    setGeneratingKey(false);
+  };
+
+  const handleRevokeKey = async (keyId: string) => {
+    if (!confirm("Revoke this admin key? The user will be locked out.")) return;
+    try {
+      const res = await fetch(`/api/admin/keys?id=${keyId}&action=revoke`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setAdminKeys((prev) => prev.map((k) => k.id === keyId ? { ...k, revoked: true, revoked_at: new Date().toISOString(), device_bound: false } : k));
+        showMsg("Key revoked!", "success");
+      } else { showMsg(data.error || "Failed to revoke", "error"); }
+    } catch { showMsg("Network error", "error"); }
+  };
+
+  const handleDeleteKey = async (keyId: string) => {
+    if (!confirm("Permanently delete this admin key? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/admin/keys?id=${keyId}&action=delete`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setAdminKeys((prev) => prev.filter((k) => k.id !== keyId));
+        showMsg("Key deleted permanently!", "success");
+      } else { showMsg(data.error || "Failed to delete", "error"); }
     } catch { showMsg("Network error", "error"); }
   };
 
@@ -479,10 +549,12 @@ export default function AdminPage() {
             className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === "content" ? "border-amber-500 text-amber-400" : "border-transparent text-zinc-400 hover:text-zinc-200"}`}>
             <Type size={16} /> Page Content
           </button>
-          <button onClick={() => { setActiveTab("security"); setEditingFarmhouse(null); }}
-            className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === "security" ? "border-amber-500 text-amber-400" : "border-transparent text-zinc-400 hover:text-zinc-200"}`}>
-            <Fingerprint size={16} /> Security
-          </button>
+          {userRole === "master" && (
+            <button onClick={() => { setActiveTab("security"); setEditingFarmhouse(null); }}
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === "security" ? "border-amber-500 text-amber-400" : "border-transparent text-zinc-400 hover:text-zinc-200"}`}>
+              <Key size={16} /> Key Management
+            </button>
+          )}
         </div>
       </div>
 
@@ -1112,48 +1184,117 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── TAB 5: SECURITY ──────────────────────────────────── */}
-        {activeTab === "security" && (
+        {/* ── TAB 5: KEY MANAGEMENT (Master Only) ──────────────── */}
+        {activeTab === "security" && userRole === "master" && (
           <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 space-y-6">
-            <h2 className="text-lg font-bold text-amber-400 mb-2">🔒 Device Security & Key Bindings</h2>
-            <p className="text-xs text-zinc-500 -mt-4">Each admin key is locked to one device on first use. Revoke a binding to allow re-binding to a new device.</p>
+            <h2 className="text-lg font-bold text-amber-400 mb-2">🔑 Admin Key Management</h2>
+            <p className="text-xs text-zinc-500 -mt-4">Generate, manage, and revoke admin access keys. Only the master key holder can access this page.</p>
 
-            {deviceBindings.length === 0 ? (
-              <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-8 text-center">
-                <Fingerprint size={32} className="mx-auto text-zinc-600 mb-2" />
-                <p className="text-sm text-zinc-500">No device bindings found yet. Keys bind automatically on first login.</p>
+            {/* Generate New Key */}
+            <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-5 space-y-3">
+              <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2"><Plus size={14} className="text-amber-400" /> Generate New Admin Key</h3>
+              <div className="flex gap-3">
+                <input
+                  value={newKeyLabel}
+                  onChange={(e) => setNewKeyLabel(e.target.value)}
+                  placeholder="Key label (e.g. Manager Phone)"
+                  maxLength={50}
+                  className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-amber-500 focus:outline-none"
+                />
+                <button
+                  onClick={handleGenerateKey}
+                  disabled={generatingKey}
+                  className="rounded-lg bg-amber-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-amber-500 disabled:opacity-50 flex items-center gap-2"
+                >
+                  <Key size={14} /> {generatingKey ? "Generating..." : "Generate"}
+                </button>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {deviceBindings.map((b) => (
-                  <div key={b.id} className="flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
+            </div>
+
+            {/* Generated Key Display */}
+            {generatedKey && (
+              <div className="rounded-xl border border-emerald-700 bg-emerald-950/30 p-5 space-y-3">
+                <h3 className="text-sm font-semibold text-emerald-400 flex items-center gap-2"><Check size={14} /> Key Generated Successfully</h3>
+                <p className="text-xs text-emerald-300/70">Copy this key now — it will never be shown again!</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 rounded-lg bg-black/50 border border-emerald-800 px-4 py-3 font-mono text-sm text-emerald-300 select-all">{generatedKey}</code>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(generatedKey); showMsg("Key copied to clipboard!", "success"); }}
+                    className="rounded-lg bg-emerald-800 px-3 py-3 text-emerald-200 transition hover:bg-emerald-700"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
+                <button onClick={() => setGeneratedKey(null)} className="text-xs text-zinc-500 hover:text-zinc-300 transition">Dismiss</button>
+              </div>
+            )}
+
+            {/* Keys List */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-zinc-300">Active Admin Keys ({adminKeys.filter(k => !k.revoked).length})</h3>
+              {adminKeys.filter(k => !k.revoked).length === 0 ? (
+                <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-8 text-center">
+                  <Key size={32} className="mx-auto text-zinc-600 mb-2" />
+                  <p className="text-sm text-zinc-500">No active admin keys. Generate one above.</p>
+                </div>
+              ) : (
+                adminKeys.filter(k => !k.revoked).map((k) => (
+                  <div key={k.id} className="flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <Fingerprint size={14} className="text-amber-400" />
-                        <span className="text-sm font-mono text-zinc-300">Key: {b.admin_key_hash}</span>
+                        <Key size={14} className="text-amber-400" />
+                        <span className="text-sm font-semibold text-zinc-200">{k.label}</span>
+                        {k.device_bound && <span className="text-[10px] bg-emerald-950 border border-emerald-800 text-emerald-400 px-2 py-0.5 rounded-full">Bound</span>}
                       </div>
-                      <p className="text-xs text-zinc-500 truncate">Device: {b.user_agent}</p>
-                      <div className="flex gap-4 mt-1 text-[10px] text-zinc-600">
-                        <span>Bound: {new Date(b.bound_at).toLocaleDateString()}</span>
-                        <span>Last used: {new Date(b.last_used).toLocaleDateString()}</span>
-                      </div>
+                      <p className="text-xs font-mono text-zinc-500">{k.key_hash_short}</p>
+                      {k.device_user_agent && (
+                        <p className="text-xs text-zinc-600 truncate mt-0.5">Device: {k.device_user_agent.substring(0, 60)}...</p>
+                      )}
+                      <p className="text-[10px] text-zinc-600 mt-1">Created: {new Date(k.created_at).toLocaleDateString()}</p>
                     </div>
-                    <button onClick={() => handleRevokeBinding(b.id)}
-                      className="ml-3 rounded-lg bg-red-950/50 border border-red-800 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-900/30">
-                      Revoke
+                    <div className="flex gap-2 ml-3">
+                      <button onClick={() => handleRevokeKey(k.id)}
+                        className="rounded-lg bg-red-950/50 border border-red-800 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-900/30">
+                        Revoke
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Revoked Keys */}
+            {adminKeys.filter(k => k.revoked).length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-zinc-500">Revoked Keys ({adminKeys.filter(k => k.revoked).length})</h3>
+                {adminKeys.filter(k => k.revoked).map((k) => (
+                  <div key={k.id} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 opacity-60">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Key size={14} className="text-zinc-600" />
+                        <span className="text-sm text-zinc-500 line-through">{k.label}</span>
+                        <span className="text-[10px] bg-red-950 border border-red-900 text-red-500 px-2 py-0.5 rounded-full">Revoked</span>
+                      </div>
+                      <p className="text-xs font-mono text-zinc-600">{k.key_hash_short}</p>
+                      {k.revoked_at && <p className="text-[10px] text-zinc-700 mt-1">Revoked: {new Date(k.revoked_at).toLocaleDateString()}</p>}
+                    </div>
+                    <button onClick={() => handleDeleteKey(k.id)}
+                      className="ml-3 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-red-400">
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 ))}
               </div>
             )}
 
+            {/* How It Works */}
             <div className="rounded-xl border border-zinc-700 bg-zinc-800/30 p-4">
               <h3 className="text-sm font-semibold text-zinc-300 mb-2">ℹ️ How It Works</h3>
               <ul className="text-xs text-zinc-500 space-y-1 list-disc list-inside">
-                <li>When an admin key is used for the first time, it is permanently bound to that device.</li>
-                <li>If someone tries to use the same key from a different browser/device, they will be blocked.</li>
-                <li>To move a key to a new device, revoke the old binding first, then login from the new device.</li>
-                <li>Use different keys for different devices (desktop, mobile, etc.).</li>
+                <li>Generate a key and share it with your admin. They use it to login.</li>
+                <li>Each key is automatically bound to the first device it&apos;s used on.</li>
+                <li>Revoking a key locks that admin out immediately.</li>
+                <li>Only you (master key holder) can manage admin keys.</li>
               </ul>
             </div>
           </div>

@@ -78,23 +78,36 @@ export default function HeroSection({ theme, settings }: HeroSectionProps) {
           className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-brown-950"
         >
           <div className="absolute inset-0 z-0 h-full w-full">
-            <div className="relative h-full w-full bg-gradient-to-br from-brown-950 via-brown-900 to-forest-950">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(252,211,77,0.03),transparent_70%)]" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-2xl">
-                  <Play size={40} className="text-white/60 ml-1" />
-                </div>
-                <p className="text-sm font-medium uppercase tracking-[0.3em] text-white/40">
-                  Promo Video
-                </p>
-                <p
-                  className="mt-1 text-lg font-semibold text-white/60"
-                  style={{ fontFamily: "var(--font-heading)" }}
-                >
-                  Coming Soon
-                </p>
+            {settings.videoUrl ? (
+              <div className="relative h-full w-full">
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 h-full w-full object-cover"
+                  src={settings.videoUrl}
+                />
               </div>
-            </div>
+            ) : (
+              <div className="relative h-full w-full bg-gradient-to-br from-brown-950 via-brown-900 to-forest-950">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(252,211,77,0.03),transparent_70%)]" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 shadow-2xl">
+                    <Play size={40} className="text-white/60 ml-1" />
+                  </div>
+                  <p className="text-sm font-medium uppercase tracking-[0.3em] text-white/40">
+                    Promo Video
+                  </p>
+                  <p
+                    className="mt-1 text-lg font-semibold text-white/60"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    Coming Soon
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-brown-950/95" />
             <div className="absolute inset-0 bg-gradient-to-r from-brown-800/40 to-transparent" />
           </div>
