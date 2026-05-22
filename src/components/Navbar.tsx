@@ -12,7 +12,11 @@ const NAV_LINKS = [
   { label: "Contact", href: "#contact" },
 ];
 
-export default function Navbar() {
+interface NavbarProps {
+  logoUrl?: string;
+}
+
+export default function Navbar({ logoUrl }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
@@ -76,11 +80,11 @@ export default function Navbar() {
             className="flex items-center gap-2"
           >
             <Image
-              src="/logo/al-jannat-logo.png"
+              src={logoUrl || "/logo/al-jannat-logo.png"}
               alt="Al Jannat Farmhouse Booking"
               width={180}
               height={60}
-              className="h-12 w-auto sm:h-14 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+              className="h-12 w-auto sm:h-14 object-contain"
               priority
             />
           </a>

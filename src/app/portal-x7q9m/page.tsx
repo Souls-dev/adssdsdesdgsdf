@@ -316,6 +316,23 @@ export default function AdminPage() {
     } catch { showMsg("Upload failed", "error"); }
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    const file = e.target.files[0];
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("farmhouseId", "site-logo"); // Use a fixed identifier for site logo
+    showMsg("Uploading logo...", "success");
+    try {
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.success) {
+        setSettings({ ...settings, theme: { ...settings.theme, logoUrl: data.path } });
+        showMsg("Logo uploaded! Don't forget to save.", "success");
+      } else { showMsg(data.error || "Upload failed", "error"); }
+    } catch { showMsg("Upload failed", "error"); }
+  };
+
   const removeImage = (idx: number) => {
     if (!editingFarmhouse) return;
     const newImages = editingFarmhouse.images.filter((_, i) => i !== idx);
@@ -748,6 +765,24 @@ export default function AdminPage() {
                 </select>
               </div>
 
+              {/* Logo Upload */}
+              <div className="border-t border-zinc-800 pt-4">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-zinc-400">Website Logo</label>
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-auto p-2 bg-white rounded-lg border border-zinc-700 flex items-center justify-center">
+                    {settings.theme.logoUrl ? (
+                      <img src={settings.theme.logoUrl} alt="Logo" className="h-full object-contain" />
+                    ) : (
+                      <span className="text-zinc-400 text-xs">No Logo</span>
+                    )}
+                  </div>
+                  <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 px-4 py-2 text-zinc-500 transition hover:border-amber-500 hover:text-amber-400 bg-zinc-900">
+                    <Upload size={16} className="mr-2" /> Upload New Logo
+                    <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                  </label>
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div className="border-t border-zinc-800 pt-6 flex flex-wrap gap-3">
                 <button onClick={handleApplyPreview}
@@ -944,6 +979,44 @@ export default function AdminPage() {
                   <input value={settings.sections.about.promiseText} onChange={(e) => setSettings({ ...settings, sections: { ...settings.sections, about: { ...settings.sections.about, promiseText: e.target.value } } })}
                     className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white" />
                 </div>
+                <div className="sm:col-span-2 space-y-3">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">Core Values</label>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {settings.sections.about.values?.map((val: any, i: number) => (
+                      <div key={i} className="rounded-lg border border-zinc-700 bg-zinc-800 p-3 flex flex-col gap-2">
+                        <input value={val.title} onChange={(e) => {
+                          const newValues = [...settings.sections.about.values];
+                          newValues[i].title = e.target.value;
+                          setSettings({ ...settings, sections: { ...settings.sections, about: { ...settings.sections.about, values: newValues } } });
+                        }} className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs font-semibold text-amber-400" placeholder="Title" />
+                        <textarea value={val.description} onChange={(e) => {
+                          const newValues = [...settings.sections.about.values];
+                          newValues[i].description = e.target.value;
+                          setSettings({ ...settings, sections: { ...settings.sections, about: { ...settings.sections.about, values: newValues } } });
+                        }} rows={2} className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-300 resize-none" placeholder="Description" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="sm:col-span-2 space-y-3">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">About Stats</label>
+                  <div className="grid gap-4 md:grid-cols-4">
+                    {settings.sections.about.stats?.map((st: any, i: number) => (
+                      <div key={i} className="rounded-lg border border-zinc-700 bg-zinc-800 p-3 flex flex-col gap-2">
+                        <input value={st.value} onChange={(e) => {
+                          const newStats = [...settings.sections.about.stats];
+                          newStats[i].value = e.target.value;
+                          setSettings({ ...settings, sections: { ...settings.sections, about: { ...settings.sections.about, stats: newStats } } });
+                        }} className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs font-bold text-white" placeholder="Value (e.g. 10,000+)" />
+                        <input value={st.label} onChange={(e) => {
+                          const newStats = [...settings.sections.about.stats];
+                          newStats[i].label = e.target.value;
+                          setSettings({ ...settings, sections: { ...settings.sections, about: { ...settings.sections.about, stats: newStats } } });
+                        }} className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-300" placeholder="Label" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -965,6 +1038,25 @@ export default function AdminPage() {
                   <label className="mb-1 block text-xs text-zinc-400">Description text</label>
                   <input value={settings.sections.contact.description} onChange={(e) => setSettings({ ...settings, sections: { ...settings.sections, contact: { ...settings.sections.contact, description: e.target.value } } })}
                     className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white" />
+                </div>
+                <div className="sm:col-span-2 space-y-3 mt-4">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">Timing Options (Grid)</label>
+                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+                    {settings.sections.contact.timingOptions?.map((opt: any, i: number) => (
+                      <div key={i} className="rounded-lg border border-zinc-700 bg-zinc-800 p-3 flex flex-col gap-2">
+                        <input value={opt.label} onChange={(e) => {
+                          const newOpts = [...settings.sections.contact.timingOptions];
+                          newOpts[i].label = e.target.value;
+                          setSettings({ ...settings, sections: { ...settings.sections, contact: { ...settings.sections.contact, timingOptions: newOpts } } });
+                        }} className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs font-semibold text-amber-400" placeholder="Label (e.g. Morning to Morning)" />
+                        <input value={opt.time} onChange={(e) => {
+                          const newOpts = [...settings.sections.contact.timingOptions];
+                          newOpts[i].time = e.target.value;
+                          setSettings({ ...settings, sections: { ...settings.sections, contact: { ...settings.sections.contact, timingOptions: newOpts } } });
+                        }} className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1 text-xs text-zinc-300" placeholder="Time (e.g. 8 am – 6 am)" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

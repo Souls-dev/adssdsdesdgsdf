@@ -12,6 +12,7 @@ const store = new Map<string, RateLimitEntry>();
 const LIMITS: Record<string, { maxRequests: number; windowMs: number }> = {
   "admin-login": { maxRequests: 5, windowMs: 15 * 60 * 1000 }, // 5 attempts per 15 min
   "admin-api": { maxRequests: 60, windowMs: 60 * 1000 },        // 60 req/min
+  "booking": { maxRequests: 10, windowMs: 15 * 60 * 1000 },     // 10 bookings per 15 min
   "public-api": { maxRequests: 120, windowMs: 60 * 1000 },      // 120 req/min
 };
 

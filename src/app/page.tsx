@@ -64,7 +64,7 @@ export default function Home() {
 
   // Fallback if settings didn't load properly (for safety)
   const activeSettings = settings || {
-    theme: { heroTheme: "theme1", activeColorPreset: "gold" },
+    theme: { heroTheme: "theme1", activeColorPreset: "gold", logoUrl: "/logo/al-jannat-logo.png" },
     hero: {
       badgeText: "32+ Years of Excellence",
       headline: "Welcome to",
@@ -84,14 +84,14 @@ export default function Home() {
       packages: { subtitle: "Our Collection", title: "Luxury Farmhouses", description: "Handpicked properties across Karachi, each offering a unique blend of comfort, entertainment, and natural beauty." },
       services: { subtitle: "What We Offer", title: "A Complete One-Roof Solution", description: "With over three decades of experience, we manage everything from booking to facilities — delivering peace of mind every step of the way.", amenitiesTitle: "Signature Amenities", coreServices: [], amenities: [] },
       about: { subtitle: "Who We Are", title: "About Al Jannat", heading: "32 Years of Unmatched Hospitality", paragraphs: ["", ""], promiseTitle: "", promiseText: "", valuesTitle: "", values: [], stats: [] },
-      contact: { subtitle: "Get In Touch", title: "Book Your Stay", description: "Fill out the form below and our team will get back to you within 24 hours to confirm your booking." }
+      contact: { subtitle: "Get In Touch", title: "Book Your Stay", description: "Fill out the form below and our team will get back to you within 24 hours to confirm your booking.", timingOptions: [] }
     },
     footer: { brandDescription: "", phone1: "", phone1Href: "", phone2: "", phone2Href: "", whatsapp: "", whatsappHref: "", email: "", address: "", instagram: "", facebook: "", copyright: "" }
   };
 
   return (
     <>
-      <Navbar />
+      <Navbar logoUrl={activeSettings.theme.logoUrl} />
       <main>
         <HeroSection theme={activeSettings.theme.heroTheme} settings={activeSettings.hero} />
         <PackagesSection onBookFarmhouse={handleBookFarmhouse} settings={activeSettings.sections.packages} />

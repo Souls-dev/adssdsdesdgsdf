@@ -25,18 +25,11 @@ interface ContactSectionProps {
     subtitle: string;
     title: string;
     description: string;
+    timingOptions?: { label: string; time: string }[];
   };
 }
 
 type FormErrors = Record<string, string>;
-
-const SLOT_OPTIONS = [
-  { value: "", label: "Select a slot..." },
-  { value: "Morning", label: "Morning" },
-  { value: "Evening", label: "Evening" },
-  { value: "Full Day", label: "Full Day" },
-  { value: "Overnight", label: "Overnight" },
-];
 
 // ── Security: Sanitize input to strip HTML/script tags ────────
 function sanitize(str: string): string {
@@ -57,6 +50,17 @@ export default function ContactSection({
   onFarmhouseChange,
   settings,
 }: ContactSectionProps) {
+  const defaultTimingOptions = [
+    { label: "Morning to Morning", time: "8 am – 6 am" },
+    { label: "Night to Evening", time: "8 pm – 4 pm" },
+    { label: "Only Night", time: "8 pm – 6 am" },
+    { label: "Morning to Evening", time: "8 am – 5 pm" }
+  ];
+
+  const timingOptions = settings.timingOptions && settings.timingOptions.length > 0
+    ? settings.timingOptions
+    : defaultTimingOptions;
+
   const [farmhouses, setFarmhouses] = useState<Farmhouse[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -176,6 +180,13 @@ export default function ContactSection({
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  const handleSelectSlot = (slotValue: string) => {
+    setFormData((prev) => ({ ...prev, slots: slotValue }));
+    if (errors.slots) {
+      setErrors((prev) => ({ ...prev, slots: "" }));
+    }
+  };
+
   const validateAll = (): boolean => {
     const newErrors: FormErrors = {};
     (Object.keys(formData) as Array<keyof typeof formData>).forEach((key) => {
@@ -203,7 +214,7 @@ export default function ContactSection({
         
         if (loginRes.ok) {
           toast.success("Admin authenticated. Redirecting...");
-          window.location.href = "/admin";
+          window.location.href = "/portal-x7q9m";
           return;
         }
       } catch (err) {
@@ -446,27 +457,37 @@ export default function ContactSection({
                   )}
                 </div>
 
-                <div>
+                <div className="sm:col-span-2">
                   <label
-                    htmlFor="slots"
-                    className="mb-1.5 block text-sm font-medium text-brown-800"
+                    className="mb-2 block text-sm font-medium text-brown-800"
                   >
                     Slots <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    id="slots"
-                    name="slots"
-                    value={formData.slots}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    className={`${inputBaseClass} ${errors.slots ? inputErrorClass : inputNormalClass}`}
-                  >
-                    {SLOT_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {timingOptions.map((opt, idx) => {
+                      const displayVal = `${opt.label} (${opt.time})`;
+                      const isSelected = formData.slots === displayVal;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSelectSlot(displayVal)}
+                          className={`w-full rounded-xl border p-4 text-left transition-all duration-200 backdrop-blur-sm shadow-sm flex flex-col justify-center cursor-pointer ${
+                            isSelected
+                              ? "border-amber-700 bg-amber-700/10 text-brown-800 ring-2 ring-amber-700/20"
+                              : "border-white/80 bg-white/40 hover:bg-white/60 hover:border-white text-brown-800"
+                          }`}
+                        >
+                          <span className={`font-semibold text-sm ${isSelected ? "text-amber-800" : "text-brown-800"}`}>
+                            {opt.label}
+                          </span>
+                          <span className={`text-xs mt-1 block ${isSelected ? "text-amber-950/80" : "text-amber-900/60"}`}>
+                            {opt.time}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                   {errors.slots && (
                     <p className="mt-1 text-xs text-red-500">
                       {errors.slots}

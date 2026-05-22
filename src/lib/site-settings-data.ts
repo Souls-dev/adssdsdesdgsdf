@@ -5,6 +5,7 @@ export type SiteSettings = {
     activeColorPreset: string;
     customColors: Record<string, string>;
     heroTheme: string;
+    logoUrl: string;
   };
   hero: {
     badgeText: string;
@@ -46,6 +47,7 @@ export type SiteSettings = {
       subtitle: string;
       title: string;
       description: string;
+      timingOptions: { label: string; time: string }[];
     };
   };
   footer: {
@@ -70,7 +72,7 @@ export type SiteSettings = {
 
 /** Hardcoded factory defaults — used for reset */
 const DEFAULT_SETTINGS: SiteSettings = {
-  theme: { activeColorPreset: "gold", customColors: {}, heroTheme: "theme1" },
+  theme: { activeColorPreset: "gold", customColors: {}, heroTheme: "theme1", logoUrl: "/logo/al-jannat-logo.png" },
   hero: {
     badgeText: "32+ Years of Excellence",
     headline: "Welcome to",
@@ -129,7 +131,17 @@ const DEFAULT_SETTINGS: SiteSettings = {
         { value: "24/7", label: "Dedicated Support" },
       ],
     },
-    contact: { subtitle: "Get In Touch", title: "Book Your Stay", description: "Fill out the form below and our team will get back to you within 24 hours to confirm your booking." },
+    contact: { 
+      subtitle: "Get In Touch", 
+      title: "Book Your Stay", 
+      description: "Fill out the form below and our team will get back to you within 24 hours to confirm your booking.",
+      timingOptions: [
+        { label: "Morning to Morning", time: "8 am – 6 am" },
+        { label: "Night to Evening", time: "8 pm – 4 pm" },
+        { label: "Only Night", time: "8 pm – 6 am" },
+        { label: "Morning to Evening", time: "8 am – 5 pm" }
+      ]
+    },
   },
   footer: {
     brandDescription: "Pakistan's most trusted farmhouse booking agency with over 32 years of legacy. Delivering premium booking solutions and unforgettable experiences since 1994.",
