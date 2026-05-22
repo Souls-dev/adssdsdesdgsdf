@@ -157,6 +157,19 @@ const DEFAULT_SETTINGS: SiteSettings = {
   meta: { lastModified: "", modifiedBy: "system" },
 };
 
+/** Deep merge: fills in any missing keys from defaults */
+function deepMerge(target: any, source: any): any {
+  const result = { ...source };
+  for (const key of Object.keys(target)) {
+    if (result[key] === undefined || result[key] === null) {
+      result[key] = target[key];
+    } else if (typeof target[key] === "object" && !Array.isArray(target[key]) && target[key] !== null && typeof result[key] === "object" && !Array.isArray(result[key])) {
+      result[key] = deepMerge(target[key], result[key]);
+    }
+  }
+  return result;
+}
+
 /** Read settings from Supabase */
 export async function readSettings(): Promise<SiteSettings> {
   const { data, error } = await supabase
@@ -168,7 +181,8 @@ export async function readSettings(): Promise<SiteSettings> {
     console.error("Failed to read settings, using defaults:", error);
     return structuredClone(DEFAULT_SETTINGS);
   }
-  return data.data as SiteSettings;
+  // Merge with defaults to fill any missing fields
+  return deepMerge(DEFAULT_SETTINGS, data.data) as SiteSettings;
 }
 
 /** Write settings to Supabase */
