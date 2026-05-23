@@ -51,10 +51,10 @@ export default function ContactSection({
   settings,
 }: ContactSectionProps) {
   const defaultTimingOptions = [
-    { label: "Morning to Morning", time: "8 am – 6 am" },
-    { label: "Night to Evening", time: "8 pm – 4 pm" },
-    { label: "Only Night", time: "8 pm – 6 am" },
-    { label: "Morning to Evening", time: "8 am – 5 pm" }
+    { label: "Morning to Morning", time: "22 Hours" },
+    { label: "Night to Evening", time: "20 Hours" },
+    { label: "Only Night", time: "10 Hours" },
+    { label: "Morning to Evening", time: "9 Hours" }
   ];
 
   const timingOptions = settings.timingOptions && settings.timingOptions.length > 0
@@ -459,35 +459,29 @@ export default function ContactSection({
 
                 <div className="sm:col-span-2">
                   <label
-                    className="mb-2 block text-sm font-medium text-brown-800"
+                    htmlFor="slots"
+                    className="mb-1.5 block text-sm font-medium text-brown-800"
                   >
                     Slots <span className="text-red-500">*</span>
                   </label>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <select
+                    id="slots"
+                    name="slots"
+                    value={formData.slots}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={`${inputBaseClass} ${errors.slots ? inputErrorClass : inputNormalClass}`}
+                  >
+                    <option value="">Select a slot...</option>
                     {timingOptions.map((opt, idx) => {
                       const displayVal = `${opt.label} (${opt.time})`;
-                      const isSelected = formData.slots === displayVal;
                       return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleSelectSlot(displayVal)}
-                          className={`w-full rounded-xl border p-4 text-left transition-all duration-200 backdrop-blur-sm shadow-sm flex flex-col justify-center cursor-pointer ${
-                            isSelected
-                              ? "border-amber-700 bg-amber-700/10 text-brown-800 ring-2 ring-amber-700/20"
-                              : "border-white/80 bg-white/40 hover:bg-white/60 hover:border-white text-brown-800"
-                          }`}
-                        >
-                          <span className={`font-semibold text-sm ${isSelected ? "text-amber-800" : "text-brown-800"}`}>
-                            {opt.label}
-                          </span>
-                          <span className={`text-xs mt-1 block ${isSelected ? "text-amber-950/80" : "text-amber-900/60"}`}>
-                            {opt.time}
-                          </span>
-                        </button>
+                        <option key={idx} value={displayVal}>
+                          {opt.label} ({opt.time})
+                        </option>
                       );
                     })}
-                  </div>
+                  </select>
                   {errors.slots && (
                     <p className="mt-1 text-xs text-red-500">
                       {errors.slots}

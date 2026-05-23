@@ -136,10 +136,10 @@ const DEFAULT_SETTINGS: SiteSettings = {
       title: "Book Your Stay", 
       description: "Fill out the form below and our team will get back to you within 24 hours to confirm your booking.",
       timingOptions: [
-        { label: "Morning to Morning", time: "8 am – 6 am" },
-        { label: "Night to Evening", time: "8 pm – 4 pm" },
-        { label: "Only Night", time: "8 pm – 6 am" },
-        { label: "Morning to Evening", time: "8 am – 5 pm" }
+        { label: "Morning to Morning", time: "22 Hours" },
+        { label: "Night to Evening", time: "20 Hours" },
+        { label: "Only Night", time: "10 Hours" },
+        { label: "Morning to Evening", time: "9 Hours" }
       ]
     },
   },
