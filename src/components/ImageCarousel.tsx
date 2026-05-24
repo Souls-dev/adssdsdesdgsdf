@@ -8,11 +8,15 @@ interface ImageCarouselProps {
   images: string[];
   alt: string;
   fallbackName: string;
+  onImageClick?: (index: number) => void;
 }
 
-export default function ImageCarousel({ images, alt, fallbackName }: ImageCarouselProps) {
+export default function ImageCarousel({ images, alt, fallbackName, onImageClick }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
+  const [isIntersecting, setIsIntersecting] = useState(true);
+  
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -30,14 +34,31 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
   const totalSlides = allFailed ? 1 : images.length;
   const safeIndex = currentIndex >= totalSlides ? 0 : currentIndex;
 
+  // ── Intersection Observer for Viewport-Aware Auto-Swipe ──
+  useEffect(() => {
+    if (typeof window === "undefined" || !containerRef.current) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsIntersecting(entry.isIntersecting);
+      },
+      { threshold: 0.05 } // Trigger when at least 5% is visible
+    );
+
+    observer.observe(containerRef.current);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   // ── Auto-swipe logic ──────────────────────────────────
   const startAutoSwipe = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    if (allFailed || totalSlides <= 1) return;
+    if (allFailed || totalSlides <= 1 || !isIntersecting) return;
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
-    }, 2500);
-  }, [allFailed, totalSlides]);
+    }, 2800);
+  }, [allFailed, totalSlides, isIntersecting]);
 
   const stopAutoSwipe = useCallback(() => {
     if (intervalRef.current) {
@@ -46,7 +67,7 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
     }
   }, []);
 
-  // Start auto-swipe on mount; restart when totalSlides changes
+  // Restart auto-swipe when dependencies change
   useEffect(() => {
     startAutoSwipe();
     return () => {
@@ -58,7 +79,7 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
     };
   }, [startAutoSwipe, stopAutoSwipe]);
 
-  // Helper: pause auto-swipe then resume after 5s idle
+  // Helper: pause auto-swipe then resume after idle
   const pauseAndResume = useCallback(() => {
     stopAutoSwipe();
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -94,7 +115,11 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
 
   return (
     <div
-      className="group/carousel relative h-52 w-full overflow-hidden sm:h-60"
+      ref={containerRef}
+      onClick={() => onImageClick?.(safeIndex)}
+      className={`group/carousel relative h-52 w-full overflow-hidden sm:h-60 transform translate-z-0 ${
+        onImageClick ? "cursor-pointer" : ""
+      }`}
       onMouseEnter={stopAutoSwipe}
       onMouseLeave={startAutoSwipe}
     >
@@ -118,40 +143,52 @@ export default function ImageCarousel({ images, alt, fallbackName }: ImageCarous
         <div className="absolute inset-0 bg-neutral-800" />
       )}
 
-      {/* Image slides */}
-      {images.map((src, index) => (
-        <div
-          key={src}
-          className="absolute inset-0 transition-opacity duration-300 ease-in-out"
-          style={{
-            opacity: index === safeIndex && !failedImages.has(index) ? 1 : 0,
-            pointerEvents: index === safeIndex ? "auto" : "none",
-          }}
-        >
-          <Image
-            src={src}
-            alt={`${alt} - Photo ${index + 1}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-            onError={() => handleImageError(index)}
-          />
-        </div>
-      ))}
+      {/* Image slides — Optimized DOM size: only render active slide and adjacent preloaded slides */}
+      {!allFailed &&
+        images.map((src, index) => {
+          const isAdjacent =
+            index === safeIndex ||
+            index === (safeIndex + 1) % totalSlides ||
+            index === (safeIndex - 1 + totalSlides) % totalSlides;
+
+          if (!isAdjacent) return null;
+
+          return (
+            <div
+              key={src}
+              className="absolute inset-0 transition-opacity duration-300 ease-in-out transform translate-z-0 backface-hidden"
+              style={{
+                opacity: index === safeIndex && !failedImages.has(index) ? 1 : 0,
+                pointerEvents: index === safeIndex ? "auto" : "none",
+              }}
+            >
+              <Image
+                src={src}
+                alt={`${alt} - Photo ${index + 1}`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority={index === 0}
+                loading={index === 0 ? undefined : "lazy"}
+                onError={() => handleImageError(index)}
+              />
+            </div>
+          );
+        })}
 
       {/* Left/Right arrows — only when multiple images work */}
       {!allFailed && totalSlides > 1 && (
         <>
           <button
             onClick={goPrevAndReset}
-            className="absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brown-800 shadow-md opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 group-hover/carousel:opacity-100"
+            className="absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brown-800 shadow-md opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 group-hover/carousel:opacity-100 active:scale-95"
             aria-label="Previous photo"
           >
             <ChevronLeft size={18} />
           </button>
           <button
             onClick={goNextAndReset}
-            className="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brown-800 shadow-md opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 group-hover/carousel:opacity-100"
+            className="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-brown-800 shadow-md opacity-0 backdrop-blur-sm transition-all duration-200 hover:bg-white hover:scale-110 group-hover/carousel:opacity-100 active:scale-95"
             aria-label="Next photo"
           >
             <ChevronRight size={18} />

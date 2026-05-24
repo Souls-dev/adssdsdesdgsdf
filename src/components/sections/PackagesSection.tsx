@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   MapPin,
   Bed,
@@ -9,6 +10,11 @@ import {
   ChevronDown,
   ChevronUp,
   MessageCircle,
+  X,
+  Play,
+  Pause,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import ImageCarousel from "@/components/ImageCarousel";
 
@@ -46,6 +52,13 @@ export default function PackagesSection({
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [farmhouses, setFarmhouses] = useState<Farmhouse[]>([]);
 
+  // ── Lightbox State ─────────────────────────────────────
+  const [lightboxFarmhouse, setLightboxFarmhouse] = useState<Farmhouse | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number>(0);
+  const [lightboxAutoPlay, setLightboxAutoPlay] = useState<boolean>(true);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
   useEffect(() => {
     async function loadFarmhouses() {
       try {
@@ -65,6 +78,95 @@ export default function PackagesSection({
 
   const toggleExpand = (id: string) => {
     setExpandedCard(expandedCard === id ? null : id);
+  };
+
+  // ── Lightbox Helpers ────────────────────────────────────
+  const handleLightboxNext = useCallback(() => {
+    if (!lightboxFarmhouse) return;
+    setLightboxIndex((prev) =>
+      prev === lightboxFarmhouse.images.length - 1 ? 0 : prev + 1
+    );
+  }, [lightboxFarmhouse]);
+
+  const handleLightboxPrev = useCallback(() => {
+    if (!lightboxFarmhouse) return;
+    setLightboxIndex((prev) =>
+      prev === 0 ? lightboxFarmhouse.images.length - 1 : prev - 1
+    );
+  }, [lightboxFarmhouse]);
+
+  const goToLightboxIndex = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxAutoPlay(false);
+  };
+
+  const manualLightboxNext = () => {
+    handleLightboxNext();
+    setLightboxAutoPlay(false);
+  };
+
+  const manualLightboxPrev = () => {
+    handleLightboxPrev();
+    setLightboxAutoPlay(false);
+  };
+
+  // Lock body scroll when lightbox is active
+  useEffect(() => {
+    if (lightboxFarmhouse) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [lightboxFarmhouse]);
+
+  // Lightbox Auto-swipe
+  useEffect(() => {
+    if (!lightboxFarmhouse || !lightboxAutoPlay) return;
+    const timer = setInterval(() => {
+      handleLightboxNext();
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [lightboxFarmhouse, lightboxAutoPlay, lightboxIndex, handleLightboxNext]);
+
+  // Keyboard navigation for Lightbox
+  useEffect(() => {
+    if (!lightboxFarmhouse) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setLightboxFarmhouse(null);
+      } else if (e.key === "ArrowRight") {
+        manualLightboxNext();
+      } else if (e.key === "ArrowLeft") {
+        manualLightboxPrev();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxFarmhouse, lightboxIndex]);
+
+  // ── Mobile Swipe Handlers ────────────────────────────────
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    setLightboxAutoPlay(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStart === null || touchEnd === null) return;
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+    if (distance > minSwipeDistance) {
+      handleLightboxNext();
+    } else if (distance < -minSwipeDistance) {
+      handleLightboxPrev();
+    }
   };
 
   return (
@@ -101,6 +203,11 @@ export default function PackagesSection({
                   images={farm.images}
                   alt={farm.name}
                   fallbackName={farm.name}
+                  onImageClick={(index) => {
+                    setLightboxFarmhouse(farm);
+                    setLightboxIndex(index);
+                    setLightboxAutoPlay(true);
+                  }}
                 />
               </div>
 
@@ -233,6 +340,123 @@ export default function PackagesSection({
           ))}
         </div>
       </div>
+
+      {/* ── Premium Lightbox Overlay ──────────────────────── */}
+      {lightboxFarmhouse && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 p-4 backdrop-blur-md transition-opacity duration-300 animate-fadeIn"
+          onClick={() => setLightboxFarmhouse(null)} // Click outside to close
+        >
+          {/* Top panel bar */}
+          <div 
+            className="absolute top-4 inset-x-0 z-10 flex items-center justify-between px-6 text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col">
+              <h4 
+                className="text-lg font-bold tracking-wide"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                {lightboxFarmhouse.name}
+              </h4>
+              <p className="text-xs text-neutral-400">{lightboxFarmhouse.location}</p>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Play/Pause Button */}
+              <button
+                onClick={() => setLightboxAutoPlay((prev) => !prev)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200"
+                aria-label={lightboxAutoPlay ? "Pause slideshow" : "Start slideshow"}
+              >
+                {lightboxAutoPlay ? <Pause size={18} /> : <Play size={18} />}
+              </button>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setLightboxFarmhouse(null)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200 active:scale-90"
+                aria-label="Close image preview"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Central image presentation stage */}
+          <div
+            className="relative flex h-[70vh] w-full max-w-5xl items-center justify-center"
+            onClick={(e) => e.stopPropagation()} // Stop propagation to prevent closing
+          >
+            {/* Left Manual Swiper */}
+            <button
+              onClick={manualLightboxPrev}
+              className="absolute left-2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200 sm:left-4 active:scale-90"
+              aria-label="Previous photo"
+            >
+              <ChevronLeft size={24} />
+            </button>
+
+            {/* Image Viewer Container */}
+            <div
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className="relative h-full w-full overflow-hidden rounded-2xl border border-white/10 bg-neutral-900 shadow-2xl transition-all duration-300"
+            >
+              <Image
+                src={lightboxFarmhouse.images[lightboxIndex]}
+                alt={`${lightboxFarmhouse.name} - Fullscreen view ${lightboxIndex + 1}`}
+                fill
+                className="object-contain select-none pointer-events-none"
+                sizes="(max-width: 1200px) 100vw, 1200px"
+                priority
+              />
+            </div>
+
+            {/* Right Manual Swiper */}
+            <button
+              onClick={manualLightboxNext}
+              className="absolute right-2 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200 sm:right-4 active:scale-90"
+              aria-label="Next photo"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </div>
+
+          {/* Bottom Indicators & Thumbnails panel */}
+          <div
+            className="mt-6 flex flex-col items-center justify-center gap-3 z-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="rounded-full bg-black/45 px-3 py-1.5 text-xs font-semibold text-neutral-300 backdrop-blur-md">
+              {lightboxIndex + 1} / {lightboxFarmhouse.images.length}
+            </div>
+
+            <div className="flex max-w-[90vw] gap-2 overflow-x-auto p-1.5 scrollbar-thin">
+              {lightboxFarmhouse.images.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => goToLightboxIndex(idx)}
+                  className={`relative h-12 w-16 flex-shrink-0 overflow-hidden rounded-lg transition-all duration-200 ${
+                    idx === lightboxIndex
+                      ? "ring-2 ring-amber-500 scale-105 opacity-100"
+                      : "opacity-45 hover:opacity-75"
+                  }`}
+                >
+                  <Image
+                    src={img}
+                    alt={`Thumbnail ${idx + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
