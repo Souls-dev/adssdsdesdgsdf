@@ -108,53 +108,78 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (binding) {
-      // Key already bound — check device match via cookie OR fingerprint
-      const cookieMatch = binding.device_id === deviceId;
-      const fingerprintMatch = binding.device_fingerprint && binding.device_fingerprint === deviceFingerprint;
-
-      if (!cookieMatch && !fingerprintMatch) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "This key is already bound to another device. Contact the system administrator to revoke the binding.",
-          },
-          { status: 403 }
-        );
+    if (role === "master") {
+      // Master keys bypass strict device matching to allow the owner to log in from PC, phone, or tablet simultaneously.
+      // We still update or insert the binding row for audit visibility in the portal.
+      if (binding) {
+        await supabase
+          .from("admin_key_bindings")
+          .update({
+            last_used: new Date().toISOString(),
+            user_agent: userAgent,
+            device_fingerprint: deviceFingerprint,
+          })
+          .eq("admin_key_hash", keyHash);
+      } else {
+        await supabase
+          .from("admin_key_bindings")
+          .insert({
+            admin_key_hash: keyHash,
+            device_id: deviceId,
+            user_agent: userAgent,
+            device_fingerprint: deviceFingerprint,
+          });
       }
-
-      // If cookie was lost but fingerprint matched, restore the cookie device ID
-      if (!cookieMatch && fingerprintMatch) {
-        deviceId = binding.device_id;
-      }
-
-      // Device matches — update last_used and fingerprint
-      await supabase
-        .from("admin_key_bindings")
-        .update({
-          last_used: new Date().toISOString(),
-          user_agent: userAgent,
-          device_fingerprint: deviceFingerprint,
-        })
-        .eq("admin_key_hash", keyHash);
     } else {
-      // First use — bind this key to this device with fingerprint
-      const { error: insertError } = await supabase
-        .from("admin_key_bindings")
-        .insert({
-          admin_key_hash: keyHash,
-          device_id: deviceId,
-          user_agent: userAgent,
-          device_fingerprint: deviceFingerprint,
-        });
+      // Normal admin keys enforce strict single-device limit
+      if (binding) {
+        // Key already bound — check device match via cookie OR fingerprint
+        const cookieMatch = binding.device_id === deviceId;
+        const fingerprintMatch = binding.device_fingerprint && binding.device_fingerprint === deviceFingerprint;
 
-      if (insertError) {
-        console.error("Failed to bind key to device:", insertError);
-        return NextResponse.json(
-          { success: false, message: "Failed to register device" },
-          { status: 500 }
-        );
+        if (!cookieMatch && !fingerprintMatch) {
+          return NextResponse.json(
+            {
+              success: false,
+              message:
+                "This key is already bound to another device. Contact the system administrator to revoke the binding.",
+            },
+            { status: 403 }
+          );
+        }
+
+        // If cookie was lost but fingerprint matched, restore the cookie device ID
+        if (!cookieMatch && fingerprintMatch) {
+          deviceId = binding.device_id;
+        }
+
+        // Device matches — update last_used and fingerprint
+        await supabase
+          .from("admin_key_bindings")
+          .update({
+            last_used: new Date().toISOString(),
+            user_agent: userAgent,
+            device_fingerprint: deviceFingerprint,
+          })
+          .eq("admin_key_hash", keyHash);
+      } else {
+        // First use — bind this key to this device with fingerprint
+        const { error: insertError } = await supabase
+          .from("admin_key_bindings")
+          .insert({
+            admin_key_hash: keyHash,
+            device_id: deviceId,
+            user_agent: userAgent,
+            device_fingerprint: deviceFingerprint,
+          });
+
+        if (insertError) {
+          console.error("Failed to bind key to device:", insertError);
+          return NextResponse.json(
+            { success: false, message: "Failed to register device" },
+            { status: 500 }
+          );
+        }
       }
     }
 

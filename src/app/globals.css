@@ -423,6 +423,21 @@ h6 {
 /* ─────────────────────────────────────────────────────────
    STYLE 2: SPLIT SCREEN REVEAL (SEQUENTIAL CRACK & PARTICLES)
    ───────────────────────────────────────────────────────── */
+.split-style {
+  animation: screenVibrate 2.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  will-change: transform;
+}
+
+@keyframes screenVibrate {
+  0%, 34% { transform: scale(1) translate3d(0, 0, 0); }
+  35% { transform: scale(1.03) translate3d(-3px, -2px, 0); }
+  36% { transform: scale(1.03) translate3d(3px, 3px, 0); }
+  37% { transform: scale(1.02) translate3d(-4px, 1px, 0); }
+  38% { transform: scale(1.02) translate3d(2px, -3px, 0); }
+  39% { transform: scale(1.01) translate3d(-1px, 2px, 0); }
+  40%, 100% { transform: scale(1) translate3d(0, 0, 0); }
+}
+
 .loading-split-pane {
   position: absolute;
   inset: 0;
@@ -474,6 +489,31 @@ h6 {
       0 100%
     );
   }
+}
+
+/* Duplicate content alignment and precise clipping */
+.split-content-duplicate {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  background: transparent;
+  will-change: clip-path;
+}
+
+.loading-split-top .split-content-duplicate {
+  top: 0;
+  clip-path: inset(0 0 50% 0);
+}
+
+.loading-split-bottom .split-content-duplicate {
+  top: -50vh;
+  clip-path: inset(50% 0 0 0);
 }
 
 /* Crack Divider Line — animates in with a flash when crack forms */
@@ -765,17 +805,20 @@ h6 {
   display: flex;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 .curtain-strip {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: #0a0a0a;
+  background: linear-gradient(180deg, #121212 0%, #070707 100%);
+  box-shadow: inset -1px 0 0 rgba(245, 158, 11, 0.1), inset 1px 0 0 rgba(255, 255, 255, 0.01);
   will-change: transform;
   transform: translateZ(0) scaleY(1);
   transform-origin: top;
-  transition: transform 1.0s cubic-bezier(0.85, 0, 0.15, 1);
+  transition: transform 1.2s cubic-bezier(0.85, 0, 0.15, 1);
+  z-index: 1;
 }
 
 /* Divide screen into 5 equal columns */
@@ -787,10 +830,44 @@ h6 {
 
 /* Staggered exit transitions */
 .curtain-style.exiting .curtain-strip-1 { transform: scaleY(0); transition-delay: 0.0s; }
-.curtain-style.exiting .curtain-strip-2 { transform: scaleY(0); transition-delay: 0.1s; }
-.curtain-style.exiting .curtain-strip-3 { transform: scaleY(0); transition-delay: 0.2s; }
-.curtain-style.exiting .curtain-strip-4 { transform: scaleY(0); transition-delay: 0.1s; }
+.curtain-style.exiting .curtain-strip-2 { transform: scaleY(0); transition-delay: 0.15s; }
+.curtain-style.exiting .curtain-strip-3 { transform: scaleY(0); transition-delay: 0.3s; }
+.curtain-style.exiting .curtain-strip-4 { transform: scaleY(0); transition-delay: 0.15s; }
 .curtain-style.exiting .curtain-strip-5 { transform: scaleY(0); transition-delay: 0.0s; }
+
+.curtain-logo-container {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.curtain-logo-circle {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-amber-600, #d97706);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 15, 15, 0.85);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+  animation: curtainLogoPulse 3.0s ease-in-out infinite;
+}
+
+@keyframes curtainLogoPulse {
+  0%, 100% { border-color: var(--color-amber-600, #d97706); box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); transform: scale(1); }
+  50% { border-color: var(--color-cream-200, #fde68a); box-shadow: 0 0 35px rgba(245, 158, 11, 0.5); transform: scale(1.05); }
+}
+
+.curtain-logo-text {
+  font-family: var(--font-heading, "Playfair Display", serif);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-cream-100, #fef3c7);
+  letter-spacing: 0.05em;
+  margin-left: 0.1rem;
+}
 
 .curtain-brand {
   font-size: 2.6rem;
@@ -798,7 +875,8 @@ h6 {
   color: var(--color-cream-100, #fef3c7);
   letter-spacing: 0.1em;
   margin-bottom: 0.5rem;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+  animation: splitTextGlow 2.5s ease-in-out infinite;
 }
 
 .curtain-line {
@@ -806,6 +884,7 @@ h6 {
   height: 2px;
   background: var(--color-amber-500, #f59e0b);
   margin-bottom: 1rem;
+  box-shadow: 0 0 8px var(--color-amber-500);
 }
 
 .curtain-tagline {
@@ -820,12 +899,28 @@ h6 {
    STYLE 6: PULSE RIPPLE
    ───────────────────────────────────────────────────────── */
 .ripple-style {
-  background: #080808;
+  background: #060606;
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity;
+  overflow: hidden;
 }
+
 .ripple-style.exiting {
   opacity: 0;
+}
+
+.ripple-ambient-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(245, 158, 11, 0.08) 0%, transparent 65%);
+  pointer-events: none;
+  animation: ambientPulse 4.0s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes ambientPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
 }
 
 .ripple-rings {
@@ -834,7 +929,7 @@ h6 {
   top: 50%;
   transform: translate3d(-50%, -50%, 0);
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
 .ripple-ring {
@@ -857,12 +952,13 @@ h6 {
     transform: translate3d(-50%, -50%, 0) scale(0.8);
     opacity: 0.8;
     border-color: var(--color-amber-600, #d97706);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
   }
   100% {
     transform: translate3d(-50%, -50%, 0) scale(2.8);
     opacity: 0;
     border-color: var(--color-cream-300, #fcd34d);
-    box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
+    box-shadow: 0 0 35px rgba(245, 158, 11, 0.25);
   }
 }
 
@@ -870,13 +966,20 @@ h6 {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: #0a0a0a;
+  background: #090909;
   border: 2px solid var(--color-amber-600, #d97706);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
   margin-bottom: 1.5rem;
+  animation: logoPulseSpin 6.0s ease-in-out infinite;
+  z-index: 3;
+}
+
+@keyframes logoPulseSpin {
+  0%, 100% { transform: scale(1) rotate(0deg); border-color: var(--color-amber-600, #d97706); box-shadow: 0 0 25px rgba(245, 158, 11, 0.25); }
+  50% { transform: scale(1.06) rotate(180deg); border-color: var(--color-cream-200, #fde68a); box-shadow: 0 0 45px rgba(245, 158, 11, 0.55); }
 }
 
 .ripple-logo-text {
@@ -885,6 +988,12 @@ h6 {
   color: var(--color-cream-100, #fef3c7);
   letter-spacing: 0.05em;
   margin-left: 0.1rem;
+  animation: textRotateCorrection 6.0s ease-in-out infinite;
+}
+
+@keyframes textRotateCorrection {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-180deg); }
 }
 
 .ripple-title {
@@ -893,6 +1002,8 @@ h6 {
   color: var(--color-cream-100, #fef3c7);
   letter-spacing: 0.1em;
   margin-bottom: 0.4rem;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+  animation: splitTextGlow 2.5s ease-in-out infinite;
 }
 
 .ripple-subtitle {

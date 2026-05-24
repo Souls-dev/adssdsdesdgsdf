@@ -14,10 +14,34 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
     return (
       <div className={`loading-screen-wrapper split-style ${isExitingClass}`}>
         {/* Top Pane — starts as full solid, crack forms via animation */}
-        <div className="loading-split-pane loading-split-top" />
+        <div className="loading-split-pane loading-split-top">
+          <div className="split-content-duplicate top-half">
+            <div className="loading-brand-glow">
+              <span className="brand-glow-word font-heading">Al Jannat</span>
+            </div>
+            <p className="loading-split-subtitle">Premium Farmhouses</p>
+            <div className="loading-split-spinner">
+              <span className="spinner-dot" />
+              <span className="spinner-dot" />
+              <span className="spinner-dot" />
+            </div>
+          </div>
+        </div>
 
         {/* Bottom Pane */}
-        <div className="loading-split-pane loading-split-bottom" />
+        <div className="loading-split-pane loading-split-bottom">
+          <div className="split-content-duplicate bottom-half">
+            <div className="loading-brand-glow">
+              <span className="brand-glow-word font-heading">Al Jannat</span>
+            </div>
+            <p className="loading-split-subtitle">Premium Farmhouses</p>
+            <div className="loading-split-spinner">
+              <span className="spinner-dot" />
+              <span className="spinner-dot" />
+              <span className="spinner-dot" />
+            </div>
+          </div>
+        </div>
 
         {/* Crack Line — hidden initially, animates in */}
         <div className="loading-split-crack" />
@@ -27,19 +51,6 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
           {Array.from({ length: 12 }).map((_, i) => (
             <span key={i} className={`split-particle split-particle-${i + 1}`} />
           ))}
-        </div>
-
-        {/* Center Content */}
-        <div className="loading-center-content">
-          <div className="loading-brand-glow">
-            <span className="brand-glow-word font-heading">Al Jannat</span>
-          </div>
-          <p className="loading-split-subtitle">Premium Farmhouses</p>
-          <div className="loading-split-spinner">
-            <span className="spinner-dot" />
-            <span className="spinner-dot" />
-            <span className="spinner-dot" />
-          </div>
         </div>
       </div>
     );
@@ -101,6 +112,11 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
 
         {/* Center Content */}
         <div className="loading-center-content">
+          <div className="curtain-logo-container">
+            <div className="curtain-logo-circle">
+              <span className="curtain-logo-text font-heading">AJ</span>
+            </div>
+          </div>
           <div className="curtain-brand font-heading">Al Jannat</div>
           <div className="curtain-line" />
           <p className="curtain-tagline">Premium Farmhouse Experience</p>
@@ -113,6 +129,9 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
   if (style === "ripple") {
     return (
       <div className={`loading-screen-wrapper ripple-style ${isExitingClass}`}>
+        {/* Ambient gold background glow */}
+        <div className="ripple-ambient-glow" />
+
         {/* Concentric ripple rings expanding */}
         <div className="ripple-rings">
           <div className="ripple-ring ripple-ring-1" />
