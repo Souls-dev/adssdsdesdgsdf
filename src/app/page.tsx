@@ -9,6 +9,7 @@ import PackagesSection from "@/components/sections/PackagesSection";
 import ServicesSection from "@/components/sections/ServicesSection";
 import AboutSection from "@/components/sections/AboutSection";
 import ContactSection from "@/components/sections/ContactSection";
+import LoadingScreen from "@/components/LoadingScreen";
 import { applyTheme } from "@/lib/theme-utils";
 
 export default function Home() {
@@ -55,11 +56,7 @@ export default function Home() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-amber-500 font-bold">
-        <div className="animate-pulse">Loading Al Jannat...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // Fallback if settings didn't load properly (for safety)
