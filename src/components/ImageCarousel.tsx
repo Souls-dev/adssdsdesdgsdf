@@ -170,6 +170,7 @@ export default function ImageCarousel({ images, alt, fallbackName, onImageClick 
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority={index === 0}
                 loading={index === 0 ? undefined : "lazy"}
+                unoptimized={true}
                 onError={() => handleImageError(index)}
               />
             </div>

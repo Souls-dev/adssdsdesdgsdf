@@ -11,8 +11,6 @@ import {
   ChevronUp,
   MessageCircle,
   X,
-  Play,
-  Pause,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -55,7 +53,7 @@ export default function PackagesSection({
   // ── Lightbox State ─────────────────────────────────────
   const [lightboxFarmhouse, setLightboxFarmhouse] = useState<Farmhouse | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number>(0);
-  const [lightboxAutoPlay, setLightboxAutoPlay] = useState<boolean>(true);
+  const [interactionTrigger, setInteractionTrigger] = useState<number>(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
@@ -97,17 +95,17 @@ export default function PackagesSection({
 
   const goToLightboxIndex = (index: number) => {
     setLightboxIndex(index);
-    setLightboxAutoPlay(false);
+    setInteractionTrigger(Date.now());
   };
 
   const manualLightboxNext = () => {
     handleLightboxNext();
-    setLightboxAutoPlay(false);
+    setInteractionTrigger(Date.now());
   };
 
   const manualLightboxPrev = () => {
     handleLightboxPrev();
-    setLightboxAutoPlay(false);
+    setInteractionTrigger(Date.now());
   };
 
   // Lock body scroll when lightbox is active
@@ -124,12 +122,12 @@ export default function PackagesSection({
 
   // Lightbox Auto-swipe
   useEffect(() => {
-    if (!lightboxFarmhouse || !lightboxAutoPlay) return;
+    if (!lightboxFarmhouse) return;
     const timer = setInterval(() => {
       handleLightboxNext();
     }, 3000);
     return () => clearInterval(timer);
-  }, [lightboxFarmhouse, lightboxAutoPlay, lightboxIndex, handleLightboxNext]);
+  }, [lightboxFarmhouse, interactionTrigger, handleLightboxNext]);
 
   // Keyboard navigation for Lightbox
   useEffect(() => {
@@ -151,7 +149,6 @@ export default function PackagesSection({
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
-    setLightboxAutoPlay(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -164,8 +161,10 @@ export default function PackagesSection({
     const minSwipeDistance = 50;
     if (distance > minSwipeDistance) {
       handleLightboxNext();
+      setInteractionTrigger(Date.now());
     } else if (distance < -minSwipeDistance) {
       handleLightboxPrev();
+      setInteractionTrigger(Date.now());
     }
   };
 
@@ -206,7 +205,7 @@ export default function PackagesSection({
                   onImageClick={(index) => {
                     setLightboxFarmhouse(farm);
                     setLightboxIndex(index);
-                    setLightboxAutoPlay(true);
+                    setInteractionTrigger(Date.now());
                   }}
                 />
               </div>
@@ -347,41 +346,18 @@ export default function PackagesSection({
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 p-4 backdrop-blur-md transition-opacity duration-300 animate-fadeIn"
           onClick={() => setLightboxFarmhouse(null)} // Click outside to close
         >
-          {/* Top panel bar */}
-          <div 
-            className="absolute top-4 inset-x-0 z-10 flex items-center justify-between px-6 text-white"
-            onClick={(e) => e.stopPropagation()}
+          {/* Close Button */}
+          <button
+            onClick={() => setLightboxFarmhouse(null)}
+            className="absolute top-4 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200 active:scale-90"
+            aria-label="Close image preview"
+            onClickCapture={(e) => {
+              e.stopPropagation();
+              setLightboxFarmhouse(null);
+            }}
           >
-            <div className="flex flex-col">
-              <h4 
-                className="text-lg font-bold tracking-wide"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                {lightboxFarmhouse.name}
-              </h4>
-              <p className="text-xs text-neutral-400">{lightboxFarmhouse.location}</p>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {/* Play/Pause Button */}
-              <button
-                onClick={() => setLightboxAutoPlay((prev) => !prev)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200"
-                aria-label={lightboxAutoPlay ? "Pause slideshow" : "Start slideshow"}
-              >
-                {lightboxAutoPlay ? <Pause size={18} /> : <Play size={18} />}
-              </button>
-
-              {/* Close Button */}
-              <button
-                onClick={() => setLightboxFarmhouse(null)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-all duration-200 active:scale-90"
-                aria-label="Close image preview"
-              >
-                <X size={20} />
-              </button>
-            </div>
-          </div>
+            <X size={24} />
+          </button>
 
           {/* Central image presentation stage */}
           <div
@@ -411,6 +387,7 @@ export default function PackagesSection({
                 className="object-contain select-none pointer-events-none"
                 sizes="(max-width: 1200px) 100vw, 1200px"
                 priority
+                unoptimized={true}
               />
             </div>
 
@@ -450,6 +427,7 @@ export default function PackagesSection({
                     fill
                     className="object-cover"
                     sizes="64px"
+                    unoptimized={true}
                   />
                 </button>
               ))}
