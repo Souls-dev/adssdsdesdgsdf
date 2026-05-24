@@ -20,6 +20,7 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
               <span className="brand-glow-word font-heading">Al Jannat</span>
             </div>
             <p className="loading-split-subtitle">Premium Farmhouses</p>
+            <p className="loading-split-loading-text">L O A D I N G</p>
             <div className="loading-split-spinner">
               <span className="spinner-dot" />
               <span className="spinner-dot" />
@@ -35,6 +36,7 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
               <span className="brand-glow-word font-heading">Al Jannat</span>
             </div>
             <p className="loading-split-subtitle">Premium Farmhouses</p>
+            <p className="loading-split-loading-text">L O A D I N G</p>
             <div className="loading-split-spinner">
               <span className="spinner-dot" />
               <span className="spinner-dot" />
