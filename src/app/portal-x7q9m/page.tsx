@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Trash2, Edit, Plus, LogOut, Save, X, Upload, ToggleLeft, ToggleRight, ChevronDown, ChevronUp, Palette, Home, Shield, Type, Fingerprint, Clock, Check, AlertTriangle, Key, Copy } from "lucide-react";
 import { COLOR_THEMES, DEFAULT_CSS_VARS, type ColorTheme, type ColorOverrides } from "@/lib/theme-utils";
+import LoadingScreen from "@/components/LoadingScreen";
 
 type Farmhouse = {
   id: string;
@@ -96,6 +97,23 @@ export default function AdminPage() {
   const [customColors, setCustomColors] = useState<Record<string, string>>({});
   const [confirmPermanent, setConfirmPermanent] = useState(false);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Loading screen preview states
+  const [previewLoaderStyle, setPreviewLoaderStyle] = useState<string | null>(null);
+  const [previewLoaderExiting, setPreviewLoaderExiting] = useState(false);
+
+  const handleTestLoader = (styleName: string) => {
+    setPreviewLoaderStyle(styleName);
+    setPreviewLoaderExiting(false);
+    // Trigger exiting sequence after 2.2 seconds
+    setTimeout(() => {
+      setPreviewLoaderExiting(true);
+    }, 2200);
+    // Unmount after 3.5 seconds
+    setTimeout(() => {
+      setPreviewLoaderStyle(null);
+    }, 3500);
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -855,6 +873,52 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Loading Screen Customizer */}
+              <div className="border-t border-zinc-800 pt-6">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Loading Screen Theme</h3>
+                <p className="text-xs text-zinc-500 mb-4">Select the transition animation that plays when visitors first open the website. Test the animation preview instantly.</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {[
+                    { id: "monogram", name: "AJ Elegant Monogram", desc: "Classic rotating golden crest with monogram letters and staggered text reveal." },
+                    { id: "split", name: "Split Screen Reveal", desc: "Top and bottom panels splitting horizontally like a biscuit crack, sliding away." },
+                    { id: "gate", name: "Gilded Gate Reveal", desc: "Two elegant vertical doors opening from the center and sliding to the sides." },
+                    { id: "fade", name: "Classic Minimalist Fade", desc: "Clean full-screen overlay smoothly fading out with premium golden accents." }
+                  ].map((preset) => {
+                    const isSelected = (settings.theme.loaderStyle || "monogram") === preset.id;
+                    return (
+                      <div key={preset.id} className={`rounded-xl border p-4 flex flex-col justify-between bg-zinc-900/50 transition hover:border-zinc-500 ${isSelected ? "border-amber-500 ring-2 ring-amber-500/20" : "border-zinc-800"}`}>
+                        <div>
+                          <h4 className="text-sm font-semibold text-white flex items-center justify-between">
+                            {preset.name}
+                            {isSelected && <span className="rounded bg-amber-900/50 px-2 py-0.5 text-[10px] text-amber-400 font-bold">Active</span>}
+                          </h4>
+                          <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed">{preset.desc}</p>
+                        </div>
+                        <div className="mt-4 flex gap-2">
+                          <button
+                            onClick={() => {
+                              setSettings({
+                                ...settings,
+                                theme: { ...settings.theme, loaderStyle: preset.id }
+                              });
+                            }}
+                            className={`flex-1 rounded-lg py-1.5 text-xs font-medium transition ${isSelected ? "bg-amber-600/20 text-amber-400 border border-amber-500/30" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"}`}
+                          >
+                            Select
+                          </button>
+                          <button
+                            onClick={() => handleTestLoader(preset.id)}
+                            className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-700 hover:text-white transition"
+                          >
+                            Test
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div className="border-t border-zinc-800 pt-6 flex flex-wrap gap-3">
                 <button onClick={handleApplyPreview}
@@ -867,9 +931,9 @@ export default function AdminPage() {
                     <Check size={16} /> Make This Theme Permanent
                   </button>
                 )}
-                <button onClick={() => { handleSaveSettings({ ...settings, theme: { ...settings.theme, heroTheme: settings.theme.heroTheme } }); }} disabled={savingSettings}
+                <button onClick={() => handleSaveSettings(settings)} disabled={savingSettings}
                   className="flex items-center gap-2 rounded-lg bg-amber-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-500 disabled:opacity-50">
-                  <Save size={16} /> {savingSettings ? "Saving..." : "Save Hero Layout"}
+                  <Save size={16} /> {savingSettings ? "Saving..." : "Save Theme & Layout"}
                 </button>
               </div>
             </div>
@@ -1331,6 +1395,11 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Loading screen preview container */}
+      {previewLoaderStyle && (
+        <LoadingScreen style={previewLoaderStyle as any} exiting={previewLoaderExiting} />
       )}
     </div>
   );

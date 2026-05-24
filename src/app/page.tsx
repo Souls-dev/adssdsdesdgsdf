@@ -15,7 +15,8 @@ import { applyTheme } from "@/lib/theme-utils";
 export default function Home() {
   const [selectedFarmhouse, setSelectedFarmhouse] = useState("");
   const [settings, setSettings] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [showLoader, setShowLoader] = useState(true);
+  const [isLoaderExiting, setIsLoaderExiting] = useState(false);
 
   useEffect(() => {
     async function loadSettings() {
@@ -41,7 +42,11 @@ export default function Home() {
       } catch (err) {
         console.error("Failed to load site settings", err);
       } finally {
-        setLoading(false);
+        // Trigger exiting sequence of loading screen
+        setIsLoaderExiting(true);
+        setTimeout(() => {
+          setShowLoader(false);
+        }, 1300);
       }
     }
     loadSettings();
@@ -54,10 +59,6 @@ export default function Home() {
       contactSection.scrollIntoView({ behavior: "smooth" });
     }
   };
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
 
   // Fallback if settings didn't load properly (for safety)
   const activeSettings = settings || {
@@ -88,6 +89,12 @@ export default function Home() {
 
   return (
     <>
+      {showLoader && (
+        <LoadingScreen
+          style={activeSettings.theme.loaderStyle || "monogram"}
+          exiting={isLoaderExiting}
+        />
+      )}
       <Navbar logoUrl={activeSettings.theme.logoUrl} />
       <main>
         <HeroSection theme={activeSettings.theme.heroTheme} settings={activeSettings.hero} />

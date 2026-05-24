@@ -6,6 +6,7 @@ export type SiteSettings = {
     customColors: Record<string, string>;
     heroTheme: string;
     logoUrl: string;
+    loaderStyle?: string;
   };
   hero: {
     badgeText: string;
@@ -72,7 +73,7 @@ export type SiteSettings = {
 
 /** Hardcoded factory defaults — used for reset */
 const DEFAULT_SETTINGS: SiteSettings = {
-  theme: { activeColorPreset: "gold", customColors: {}, heroTheme: "theme1", logoUrl: "/logo/al-jannat-logo.png" },
+  theme: { activeColorPreset: "gold", customColors: {}, heroTheme: "theme1", logoUrl: "/logo/al-jannat-logo.png", loaderStyle: "monogram" },
   hero: {
     badgeText: "32+ Years of Excellence",
     headline: "Welcome to",
