@@ -19,6 +19,7 @@ export default function Home() {
   const [isLoaderExiting, setIsLoaderExiting] = useState(false);
 
   useEffect(() => {
+    const startTime = Date.now();
     async function loadSettings() {
       try {
         const res = await fetch("/api/settings");
@@ -42,11 +43,16 @@ export default function Home() {
       } catch (err) {
         console.error("Failed to load site settings", err);
       } finally {
-        // Trigger exiting sequence of loading screen
-        setIsLoaderExiting(true);
+        const elapsedTime = Date.now() - startTime;
+        const minimumDuration = 2200; // 2.2 seconds to allow animations to fully play
+        const remainingDelay = Math.max(0, minimumDuration - elapsedTime);
+
         setTimeout(() => {
-          setShowLoader(false);
-        }, 1300);
+          setIsLoaderExiting(true);
+          setTimeout(() => {
+            setShowLoader(false);
+          }, 1300); // 1.3 seconds buffer for 1.2s CSS transition
+        }, remainingDelay);
       }
     }
     loadSettings();

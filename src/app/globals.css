@@ -198,7 +198,11 @@ h6 {
   inset: 0;
   z-index: 9999;
   overflow: hidden;
-  background: #0a0a0a;
+  background: transparent;
+  pointer-events: auto;
+}
+.loading-screen-wrapper.exiting {
+  pointer-events: none;
 }
 
 /* ── Subtle animated background gradient ── */
@@ -258,6 +262,7 @@ h6 {
    STYLE 1: AJ ELEGANT MONOGRAM
    ───────────────────────────────────────────────────────── */
 .monogram-style {
+  background: #0a0a0a;
   transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .monogram-style.exiting {
@@ -657,6 +662,7 @@ h6 {
    STYLE 4: CLASSIC MINIMALIST FADE
    ───────────────────────────────────────────────────────── */
 .fade-style {
+  background: #0a0a0a;
   transition: opacity 1.0s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
