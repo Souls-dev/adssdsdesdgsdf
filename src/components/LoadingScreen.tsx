@@ -1,7 +1,7 @@
 "use client";
 
 interface LoadingScreenProps {
-  style?: string; // "monogram" | "split" | "gate" | "fade"
+  style?: string; // "monogram" | "split" | "gate" | "fade" | "curtain" | "ripple"
   exiting?: boolean;
 }
 
@@ -9,21 +9,25 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
   const isExitingClass = exiting ? "exiting" : "";
 
   // ── 1. SPLIT SCREEN REVEAL ──
+  // Starts as a solid joined screen, then a crack forms with particles, then splits apart
   if (style === "split") {
     return (
       <div className={`loading-screen-wrapper split-style ${isExitingClass}`}>
-        {/* Top Pane */}
-        <div className="loading-split-pane loading-split-top">
-          <div className="loading-bg-gradient" />
-        </div>
+        {/* Top Pane — starts as full solid, crack forms via animation */}
+        <div className="loading-split-pane loading-split-top" />
 
         {/* Bottom Pane */}
-        <div className="loading-split-pane loading-split-bottom">
-          <div className="loading-bg-gradient" />
-        </div>
+        <div className="loading-split-pane loading-split-bottom" />
 
-        {/* Crack Divider Line */}
-        <div className="loading-split-line" />
+        {/* Crack Line — hidden initially, animates in */}
+        <div className="loading-split-crack" />
+
+        {/* Crack Particles — burst out when crack forms */}
+        <div className="split-particles">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <span key={i} className={`split-particle split-particle-${i + 1}`} />
+          ))}
+        </div>
 
         {/* Center Content */}
         <div className="loading-center-content">
@@ -46,14 +50,10 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
     return (
       <div className={`loading-screen-wrapper gate-style ${isExitingClass}`}>
         {/* Left Gate */}
-        <div className="loading-gate-pane loading-gate-left">
-          <div className="loading-bg-gradient" />
-        </div>
+        <div className="loading-gate-pane loading-gate-left" />
 
         {/* Right Gate */}
-        <div className="loading-gate-pane loading-gate-right">
-          <div className="loading-bg-gradient" />
-        </div>
+        <div className="loading-gate-pane loading-gate-right" />
 
         {/* Vertical Seam Line */}
         <div className="loading-gate-seam" />
@@ -78,10 +78,6 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
   if (style === "fade") {
     return (
       <div className={`loading-screen-wrapper fade-style ${isExitingClass}`}>
-        <div className="loading-fade-bg">
-          <div className="loading-bg-gradient" />
-        </div>
-        
         {/* Center Content */}
         <div className="loading-center-content">
           <h1 className="loading-fade-title font-heading">Al Jannat</h1>
@@ -92,13 +88,54 @@ export default function LoadingScreen({ style = "monogram", exiting = false }: L
     );
   }
 
-  // ── 4. AJ ELEGANT MONOGRAM (DEFAULT) ──
+  // ── 4. CURTAIN DROP ──
+  if (style === "curtain") {
+    return (
+      <div className={`loading-screen-wrapper curtain-style ${isExitingClass}`}>
+        {/* Curtain strips that fall away sequentially */}
+        <div className="curtain-strip curtain-strip-1" />
+        <div className="curtain-strip curtain-strip-2" />
+        <div className="curtain-strip curtain-strip-3" />
+        <div className="curtain-strip curtain-strip-4" />
+        <div className="curtain-strip curtain-strip-5" />
+
+        {/* Center Content */}
+        <div className="loading-center-content">
+          <div className="curtain-brand font-heading">Al Jannat</div>
+          <div className="curtain-line" />
+          <p className="curtain-tagline">Premium Farmhouse Experience</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── 5. PULSE RIPPLE ──
+  if (style === "ripple") {
+    return (
+      <div className={`loading-screen-wrapper ripple-style ${isExitingClass}`}>
+        {/* Concentric ripple rings expanding */}
+        <div className="ripple-rings">
+          <div className="ripple-ring ripple-ring-1" />
+          <div className="ripple-ring ripple-ring-2" />
+          <div className="ripple-ring ripple-ring-3" />
+        </div>
+
+        {/* Center Content */}
+        <div className="loading-center-content">
+          <div className="ripple-logo-circle">
+            <span className="ripple-logo-text font-heading">AJ</span>
+          </div>
+          <h2 className="ripple-title font-heading">Al Jannat</h2>
+          <p className="ripple-subtitle">Since 1994</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── 6. AJ ELEGANT MONOGRAM (DEFAULT) ──
   return (
     <div className={`loading-screen-wrapper monogram-style ${isExitingClass}`}>
       <div className="loading-screen">
-        {/* Animated background gradient */}
-        <div className="loading-bg-gradient" />
-
         {/* Floating ambient particles */}
         <div className="loading-particles">
           <span className="particle particle-1" />

@@ -279,18 +279,28 @@ export default function AdminPage() {
   };
 
   const handleRevokeKey = async (keyId: string) => {
-    if (!confirm("Revoke this admin key? The user will be locked out.")) return;
+    const isMasterKey = keyId.startsWith("master-");
+    if (isMasterKey) {
+      if (!confirm("Reset the device binding for this master key?")) return;
+    } else {
+      if (!confirm("Revoke this admin key? The user will be locked out.")) return;
+    }
     try {
       const res = await fetch(`/api/admin/keys?id=${keyId}&action=revoke`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
-        setAdminKeys((prev) => prev.map((k) => k.id === keyId ? { ...k, revoked: true, revoked_at: new Date().toISOString(), device_bound: false } : k));
-        showMsg("Key revoked!", "success");
+        if (isMasterKey) {
+          fetchData();
+        } else {
+          setAdminKeys((prev) => prev.map((k) => k.id === keyId ? { ...k, revoked: true, revoked_at: new Date().toISOString(), device_bound: false } : k));
+        }
+        showMsg(isMasterKey ? "Master key device binding reset successfully!" : "Key revoked!", "success");
       } else { showMsg(data.error || "Failed to revoke", "error"); }
     } catch { showMsg("Network error", "error"); }
   };
 
   const handleDeleteKey = async (keyId: string) => {
+    if (keyId.startsWith("master-")) return; // Cannot delete master key
     if (!confirm("Permanently delete this admin key? This cannot be undone.")) return;
     try {
       const res = await fetch(`/api/admin/keys?id=${keyId}&action=delete`, { method: "DELETE" });
@@ -882,7 +892,9 @@ export default function AdminPage() {
                     { id: "monogram", name: "AJ Elegant Monogram", desc: "Classic rotating golden crest with monogram letters and staggered text reveal" },
                     { id: "split", name: "Split Screen Reveal", desc: "Top and bottom panels splitting horizontally like a biscuit crack sliding away" },
                     { id: "gate", name: "Gilded Gate Reveal", desc: "Two elegant vertical doors opening from the center and sliding to the sides" },
-                    { id: "fade", name: "Classic Minimalist Fade", desc: "Clean full screen overlay smoothly fading out with premium golden accents" }
+                    { id: "fade", name: "Classic Minimalist Fade", desc: "Clean full screen overlay smoothly fading out with premium golden accents" },
+                    { id: "curtain", name: "Curtain Drop Reveal", desc: "Five vertical panels sliding upwards sequentially to reveal the website" },
+                    { id: "ripple", name: "Pulse Ripple Glow", desc: "Concentric golden rings pulsing outward behind an elegant logo circle" }
                   ].map((preset) => {
                     const isSelected = (settings.theme.loaderStyle || "monogram") === preset.id;
                     return (
@@ -1302,28 +1314,46 @@ export default function AdminPage() {
                   <p className="text-sm text-zinc-500">No active admin keys. Generate one above.</p>
                 </div>
               ) : (
-                adminKeys.filter(k => !k.revoked).map((k) => (
-                  <div key={k.id} className="flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Key size={14} className="text-amber-400" />
-                        <span className="text-sm font-semibold text-zinc-200">{k.label}</span>
-                        {k.device_bound && <span className="text-[10px] bg-emerald-950 border border-emerald-800 text-emerald-400 px-2 py-0.5 rounded-full">Bound</span>}
-                      </div>
-                      <p className="text-xs font-mono text-zinc-500">{k.key_hash_short}</p>
-                      {k.device_user_agent && (
-                        <p className="text-xs text-zinc-600 truncate mt-0.5">Device: {k.device_user_agent.substring(0, 60)}...</p>
-                      )}
-                      <p className="text-[10px] text-zinc-600 mt-1">Created: {new Date(k.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex gap-2 ml-3">
-                      <button onClick={() => handleRevokeKey(k.id)}
-                        className="rounded-lg bg-red-950/50 border border-red-800 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-900/30">
-                        Revoke
-                      </button>
-                    </div>
-                  </div>
-                ))
+                 adminKeys.filter(k => !k.revoked).map((k) => {
+                   const isMasterKey = k.id.startsWith("master-");
+                   return (
+                     <div key={k.id} className="flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
+                       <div className="flex-1 min-w-0">
+                         <div className="flex items-center gap-2 mb-1">
+                           <Key size={14} className={isMasterKey ? "text-purple-400" : "text-amber-400"} />
+                           <span className="text-sm font-semibold text-zinc-200">{k.label}</span>
+                           {k.device_bound ? (
+                             <span className="text-[10px] bg-emerald-950 border border-emerald-800 text-emerald-400 px-2 py-0.5 rounded-full">Bound</span>
+                           ) : (
+                             isMasterKey && <span className="text-[10px] bg-zinc-800 border border-zinc-700 text-zinc-400 px-2 py-0.5 rounded-full">Unbound</span>
+                           )}
+                         </div>
+                         <p className="text-xs font-mono text-zinc-500">{k.key_hash_short}</p>
+                         {k.device_user_agent && (
+                           <p className="text-xs text-zinc-600 truncate mt-0.5">Device: {k.device_user_agent.substring(0, 60)}...</p>
+                         )}
+                         <p className="text-[10px] text-zinc-600 mt-1">
+                           {isMasterKey ? "Configured in Environment" : `Created: ${new Date(k.created_at).toLocaleDateString()}`}
+                         </p>
+                       </div>
+                       <div className="flex gap-2 ml-3">
+                         {isMasterKey ? (
+                           k.device_bound && (
+                             <button onClick={() => handleRevokeKey(k.id)}
+                               className="rounded-lg bg-amber-950/50 border border-amber-800 px-3 py-1.5 text-xs text-amber-400 transition hover:bg-amber-900/30">
+                               Reset Bounding
+                             </button>
+                           )
+                         ) : (
+                           <button onClick={() => handleRevokeKey(k.id)}
+                             className="rounded-lg bg-red-950/50 border border-red-800 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-900/30">
+                             Revoke
+                           </button>
+                         )}
+                       </div>
+                     </div>
+                   );
+                 })
               )}
             </div>
 

@@ -62,6 +62,28 @@ export async function GET(request: NextRequest) {
     };
   });
 
+  // Generate virtual key entries for the configured master keys
+  const masterKeysStr = process.env.MASTER_KEYS || process.env.MASTER_KEY || "";
+  const masterKeysList = masterKeysStr.split(",").map((k) => k.trim()).filter(Boolean);
+  
+  for (const masterKey of masterKeysList) {
+    const hash = await hashKey(masterKey);
+    const binding = bindingMap.get(hash);
+    enrichedKeys.unshift({
+      id: `master-${hash.substring(0, 8)}`,
+      key_hash: hash,
+      label: `Master Key (${masterKey.substring(0, 3)}...)`,
+      created_at: new Date(2026, 0, 1).toISOString(),
+      revoked: false,
+      key_hash_short: hash.substring(0, 8) + "..." + hash.substring(hash.length - 6),
+      device_bound: !!binding,
+      device_user_agent: binding?.user_agent || null,
+      device_last_used: binding?.last_used || null,
+      binding_id: binding?.id || null,
+      is_master: true,
+    });
+  }
+
   return NextResponse.json({ success: true, keys: enrichedKeys });
 }
 
@@ -118,6 +140,29 @@ export async function DELETE(request: NextRequest) {
 
     if (!keyId) {
       return NextResponse.json({ error: "Key ID is required" }, { status: 400 });
+    }
+
+    if (keyId.startsWith("master-")) {
+      // For virtual master keys, "deleting" or "revoking" resets their device binding
+      const masterKeysStr = process.env.MASTER_KEYS || process.env.MASTER_KEY || "";
+      const masterKeysList = masterKeysStr.split(",").map((k) => k.trim()).filter(Boolean);
+      
+      for (const masterKey of masterKeysList) {
+        const hash = await hashKey(masterKey);
+        if (keyId === `master-${hash.substring(0, 8)}`) {
+          const { error } = await supabase
+            .from("admin_key_bindings")
+            .delete()
+            .eq("admin_key_hash", hash);
+            
+          if (error) {
+            console.error("Failed to delete master key binding:", error);
+            return NextResponse.json({ error: "Failed to reset binding" }, { status: 500 });
+          }
+          return NextResponse.json({ success: true, message: "Master key device binding reset successfully" });
+        }
+      }
+      return NextResponse.json({ error: "Master key not found" }, { status: 404 });
     }
 
     if (action === "delete") {
