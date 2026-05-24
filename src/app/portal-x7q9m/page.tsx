@@ -876,13 +876,13 @@ export default function AdminPage() {
               {/* Loading Screen Customizer */}
               <div className="border-t border-zinc-800 pt-6">
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Loading Screen Theme</h3>
-                <p className="text-xs text-zinc-500 mb-4">Select the transition animation that plays when visitors first open the website. Test the animation preview instantly.</p>
+                <p className="text-xs text-zinc-500 mb-4">Select the transition animation that plays when visitors first open the website and test the animation preview instantly</p>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {[
-                    { id: "monogram", name: "AJ Elegant Monogram", desc: "Classic rotating golden crest with monogram letters and staggered text reveal." },
-                    { id: "split", name: "Split Screen Reveal", desc: "Top and bottom panels splitting horizontally like a biscuit crack, sliding away." },
-                    { id: "gate", name: "Gilded Gate Reveal", desc: "Two elegant vertical doors opening from the center and sliding to the sides." },
-                    { id: "fade", name: "Classic Minimalist Fade", desc: "Clean full-screen overlay smoothly fading out with premium golden accents." }
+                    { id: "monogram", name: "AJ Elegant Monogram", desc: "Classic rotating golden crest with monogram letters and staggered text reveal" },
+                    { id: "split", name: "Split Screen Reveal", desc: "Top and bottom panels splitting horizontally like a biscuit crack sliding away" },
+                    { id: "gate", name: "Gilded Gate Reveal", desc: "Two elegant vertical doors opening from the center and sliding to the sides" },
+                    { id: "fade", name: "Classic Minimalist Fade", desc: "Clean full screen overlay smoothly fading out with premium golden accents" }
                   ].map((preset) => {
                     const isSelected = (settings.theme.loaderStyle || "monogram") === preset.id;
                     return (

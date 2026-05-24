@@ -1,120 +1,18 @@
-"use client";
+import { readSettings, readPreviewTheme } from "@/lib/site-settings-data";
+import HomeClient from "@/components/HomeClient";
 
-import { useState, useEffect } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import WhatsAppFAB from "@/components/WhatsAppFAB";
-import HeroSection from "@/components/sections/HeroSection";
-import PackagesSection from "@/components/sections/PackagesSection";
-import ServicesSection from "@/components/sections/ServicesSection";
-import AboutSection from "@/components/sections/AboutSection";
-import ContactSection from "@/components/sections/ContactSection";
-import LoadingScreen from "@/components/LoadingScreen";
-import { applyTheme } from "@/lib/theme-utils";
+// Force page to re-evaluate on each request so theme previews and customizer saves are live instantly
+export const dynamic = "force-dynamic";
 
-export default function Home() {
-  const [selectedFarmhouse, setSelectedFarmhouse] = useState("");
-  const [settings, setSettings] = useState<any>(null);
-  const [showLoader, setShowLoader] = useState(true);
-  const [isLoaderExiting, setIsLoaderExiting] = useState(false);
+export default async function Home() {
+  const settings = await readSettings();
+  const preview = await readPreviewTheme();
 
-  useEffect(() => {
-    const startTime = Date.now();
-    async function loadSettings() {
-      try {
-        const res = await fetch("/api/settings");
-        if (res.ok) {
-          const data = await res.json();
-          setSettings(data);
-          // Apply color theme dynamically on load
-          if (data?.theme?.activeColorPreset) {
-            applyTheme(data.theme.activeColorPreset);
-          }
-          // Apply custom color overrides on top of preset
-          if (data?.theme?.customColors && typeof data.theme.customColors === "object") {
-            const root = document.documentElement;
-            Object.entries(data.theme.customColors).forEach(([key, value]) => {
-              if (typeof value === "string" && key.startsWith("--color-")) {
-                root.style.setProperty(key, value);
-              }
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load site settings", err);
-      } finally {
-        const elapsedTime = Date.now() - startTime;
-        const minimumDuration = 2200; // 2.2 seconds to allow animations to fully play
-        const remainingDelay = Math.max(0, minimumDuration - elapsedTime);
+  // If there's an active theme preview, inject it onto the settings
+  if (preview) {
+    settings.theme.activeColorPreset = preview.preset;
+    settings.theme.customColors = preview.customColors;
+  }
 
-        setTimeout(() => {
-          setIsLoaderExiting(true);
-          setTimeout(() => {
-            setShowLoader(false);
-          }, 1300); // 1.3 seconds buffer for 1.2s CSS transition
-        }, remainingDelay);
-      }
-    }
-    loadSettings();
-  }, []);
-
-  const handleBookFarmhouse = (farmhouseId: string) => {
-    setSelectedFarmhouse(farmhouseId);
-    const contactSection = document.getElementById("contact");
-    if (contactSection) {
-      contactSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  // Fallback if settings didn't load properly (for safety)
-  const activeSettings = settings || {
-    theme: { heroTheme: "theme1", activeColorPreset: "gold", logoUrl: "/logo/al-jannat-logo.png" },
-    hero: {
-      badgeText: "32+ Years of Excellence",
-      headline: "Welcome to",
-      headlineAccent: "Al Jannat",
-      subheadline: "Pakistan's most trusted farmhouse booking agency — delivering premium solutions and property management since 1994. Where every stay becomes an unforgettable memory.",
-      ctaPrimary: { text: "Explore Farmhouses", href: "#packages" },
-      ctaSecondary: { text: "Book Now", href: "#contact" },
-      stats: [
-        { value: "10,000+", label: "Happy Customers" },
-        { value: "40+", label: "Premium Venues" },
-        { value: "24/7", label: "Dedicated Support" }
-      ],
-      videoUrl: "",
-      slides: []
-    },
-    sections: {
-      packages: { subtitle: "Our Collection", title: "Luxury Farmhouses", description: "Handpicked properties across Karachi, each offering a unique blend of comfort, entertainment, and natural beauty." },
-      services: { subtitle: "What We Offer", title: "A Complete One-Roof Solution", description: "With over three decades of experience, we manage everything from booking to facilities — delivering peace of mind every step of the way.", amenitiesTitle: "Signature Amenities", coreServices: [], amenities: [] },
-      about: { subtitle: "Who We Are", title: "About Al Jannat", heading: "32 Years of Unmatched Hospitality", paragraphs: ["", ""], promiseTitle: "", promiseText: "", valuesTitle: "", values: [], stats: [] },
-      contact: { subtitle: "Get In Touch", title: "Book Your Stay", description: "Fill out the form below and our team will get back to you within 24 hours to confirm your booking.", timingOptions: [] }
-    },
-    footer: { brandDescription: "", phone1: "", phone1Href: "", phone2: "", phone2Href: "", whatsapp: "", whatsappHref: "", email: "", address: "", instagram: "", facebook: "", copyright: "" }
-  };
-
-  return (
-    <>
-      {showLoader && (
-        <LoadingScreen
-          style={activeSettings.theme.loaderStyle || "monogram"}
-          exiting={isLoaderExiting}
-        />
-      )}
-      <Navbar logoUrl={activeSettings.theme.logoUrl} />
-      <main>
-        <HeroSection theme={activeSettings.theme.heroTheme} settings={activeSettings.hero} />
-        <PackagesSection onBookFarmhouse={handleBookFarmhouse} settings={activeSettings.sections.packages} />
-        <ServicesSection settings={activeSettings.sections.services} />
-        <AboutSection settings={activeSettings.sections.about} />
-        <ContactSection
-          selectedFarmhouse={selectedFarmhouse}
-          onFarmhouseChange={setSelectedFarmhouse}
-          settings={activeSettings.sections.contact}
-        />
-      </main>
-      <Footer settings={activeSettings.footer} />
-      <WhatsAppFAB settings={activeSettings.footer} />
-    </>
-  );
+  return <HomeClient initialSettings={settings} />;
 }
