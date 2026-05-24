@@ -14,13 +14,18 @@ async function hashKey(key: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Rate limit login attempts by IP
+    // 1. Rate limit login attempts by IP + User-Agent prefix (prevents global lockouts on shared local/unknown IPs)
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       request.headers.get("x-real-ip") ||
       "unknown";
 
-    const limiter = rateLimit(ip, "admin-login");
+    const userAgentHeader = request.headers.get("user-agent") || "unknown";
+    const rateLimitIdentifier = ip === "unknown" || ip === "127.0.0.1" || ip === "::1"
+      ? `${ip}:${userAgentHeader.substring(0, 100)}`
+      : ip;
+
+    const limiter = rateLimit(rateLimitIdentifier, "admin-login");
     if (!limiter.allowed) {
       return NextResponse.json(
         { success: false, message: "Too many login attempts. Try again later." },
@@ -42,18 +47,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Trim key to handle accidental trailing spaces or newlines from mobile clipboard copies
+    const trimmedKey = key.trim();
+
     // 2. Determine role: master key (env var) or admin key (Supabase table)
     let role: "master" | "admin" | null = null;
 
     const masterKeysStr = process.env.MASTER_KEYS || process.env.MASTER_KEY || "";
     const masterKeys = masterKeysStr.split(",").map((k) => k.trim()).filter(Boolean);
-    if (masterKeys.includes(key)) {
+    if (masterKeys.includes(trimmedKey)) {
       role = "master";
     }
 
     if (!role) {
       // Check admin_keys table in Supabase
-      const keyHash = await hashKey(key);
+      const keyHash = await hashKey(trimmedKey);
       const { data: adminKey } = await supabase
         .from("admin_keys")
         .select("id, revoked")
@@ -69,7 +77,7 @@ export async function POST(request: NextRequest) {
     if (!role) {
       const adminKeysStr = process.env.ADMIN_KEYS || "";
       const adminKeys = adminKeysStr.split(",").map((k) => k.trim()).filter(Boolean);
-      if (adminKeys.includes(key)) {
+      if (adminKeys.includes(trimmedKey)) {
         role = "admin";
       }
     }
@@ -84,15 +92,22 @@ export async function POST(request: NextRequest) {
     // 3. Build robust device identity (dual-layer: cookie + server fingerprint)
     let deviceId: string = request.cookies.get("admin_device_id")?.value || crypto.randomUUID();
 
-    // Server-side fingerprint: hash of browser signals that persist even if cookies clear
-    const userAgent = request.headers.get("user-agent") || "unknown";
+    // Stable OS-level device fingerprint signature that is resilient to browser version upgrades
     const acceptLang = request.headers.get("accept-language") || "";
-    const acceptEnc = request.headers.get("accept-encoding") || "";
-    const fingerprintRaw = `${userAgent}|${acceptLang}|${acceptEnc}`;
-    const deviceFingerprint = await hashKey(fingerprintRaw);
+    const isMobile = /mobile|android|iphone|ipad|phone/i.test(userAgentHeader);
+    let os = "unknown-os";
+    if (/iphone|ipad|ipod/i.test(userAgentHeader)) os = "ios";
+    else if (/android/i.test(userAgentHeader)) os = "android";
+    else if (/win/i.test(userAgentHeader)) os = "windows";
+    else if (/mac/i.test(userAgentHeader)) os = "mac";
+    else if (/linux/i.test(userAgentHeader)) os = "linux";
+    
+    const primaryLang = acceptLang.split(",")[0]?.split("-")[0]?.trim() || "en";
+    const stableFingerprintRaw = `${os}|${isMobile ? "mobile" : "desktop"}|${primaryLang}`;
+    const deviceFingerprint = await hashKey(stableFingerprintRaw);
 
     // 4. Check device binding in Supabase (applies to ALL roles, including master)
-    const keyHash = await hashKey(key);
+    const keyHash = await hashKey(trimmedKey);
 
     const { data: binding, error: fetchError } = await supabase
       .from("admin_key_bindings")
@@ -116,7 +131,7 @@ export async function POST(request: NextRequest) {
           .from("admin_key_bindings")
           .update({
             last_used: new Date().toISOString(),
-            user_agent: userAgent,
+            user_agent: userAgentHeader,
             device_fingerprint: deviceFingerprint,
           })
           .eq("admin_key_hash", keyHash);
@@ -126,7 +141,7 @@ export async function POST(request: NextRequest) {
           .insert({
             admin_key_hash: keyHash,
             device_id: deviceId,
-            user_agent: userAgent,
+            user_agent: userAgentHeader,
             device_fingerprint: deviceFingerprint,
           });
       }
@@ -158,7 +173,7 @@ export async function POST(request: NextRequest) {
           .from("admin_key_bindings")
           .update({
             last_used: new Date().toISOString(),
-            user_agent: userAgent,
+            user_agent: userAgentHeader,
             device_fingerprint: deviceFingerprint,
           })
           .eq("admin_key_hash", keyHash);
@@ -169,7 +184,7 @@ export async function POST(request: NextRequest) {
           .insert({
             admin_key_hash: keyHash,
             device_id: deviceId,
-            user_agent: userAgent,
+            user_agent: userAgentHeader,
             device_fingerprint: deviceFingerprint,
           });
 
