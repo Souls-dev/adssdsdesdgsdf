@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth-utils";
+import { verifyAdminRequest } from "@/lib/auth-utils";
 import { supabase } from "@/lib/supabase";
 
 // SHA-256 hash helper
@@ -21,11 +21,8 @@ function generateRandomKey(length = 16): string {
 
 // Verify master role
 async function verifyMaster(request: NextRequest): Promise<boolean> {
-  const token = request.cookies.get("admin_token")?.value;
-  if (!token) return false;
-  const payload = await verifyToken(token);
-  if (!payload) return false;
-  return payload.role === "master";
+  const auth = await verifyAdminRequest(request);
+  return auth.authenticated && auth.role === "master";
 }
 
 // GET — List all admin keys (master only)

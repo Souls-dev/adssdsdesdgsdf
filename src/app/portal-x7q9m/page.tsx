@@ -118,12 +118,29 @@ export default function AdminPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const resFarm = await fetch("/api/admin/farmhouses");
+      let resFarm = await fetch("/api/admin/farmhouses");
+      if (resFarm.status === 401) {
+        // Try auto-login using device binding first
+        try {
+          const autoRes = await fetch("/api/admin/login/auto", { method: "POST" });
+          if (autoRes.ok) {
+            const autoData = await autoRes.json();
+            if (autoData.success) {
+              // Auto-login succeeded! Retry fetching farmhouses
+              resFarm = await fetch("/api/admin/farmhouses");
+            }
+          }
+        } catch (e) {
+          console.error("Auto login check failed:", e);
+        }
+      }
+
       if (resFarm.status === 401) {
         setIsAuthenticated(false);
         setLoading(false);
         return;
       }
+
       const dataFarm = await resFarm.json();
       if (dataFarm.success) {
         setFarmhouses(dataFarm.farmhouses);

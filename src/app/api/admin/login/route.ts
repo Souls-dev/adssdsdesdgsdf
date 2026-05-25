@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       role = "master";
     }
 
+    let isDbRevoked = false;
     if (!role) {
       // Check admin_keys table in Supabase
       const keyHash = await hashKey(trimmedKey);
@@ -68,13 +69,17 @@ export async function POST(request: NextRequest) {
         .eq("key_hash", keyHash)
         .single();
 
-      if (adminKey && !adminKey.revoked) {
-        role = "admin";
+      if (adminKey) {
+        if (adminKey.revoked) {
+          isDbRevoked = true;
+        } else {
+          role = "admin";
+        }
       }
     }
 
     // Legacy fallback: check ADMIN_KEYS env var (for backwards compatibility)
-    if (!role) {
+    if (!role && !isDbRevoked) {
       const adminKeysStr = process.env.ADMIN_KEYS || "";
       const adminKeys = adminKeysStr.split(",").map((k) => k.trim()).filter(Boolean);
       if (adminKeys.includes(trimmedKey)) {
@@ -84,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     if (!role) {
       return NextResponse.json(
-        { success: false, message: "Invalid admin key" },
+        { success: false, message: isDbRevoked ? "This key has been revoked" : "Invalid admin key" },
         { status: 401 }
       );
     }
@@ -123,83 +128,60 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (role === "master") {
-      // Master keys bypass strict device matching to allow the owner to log in from PC, phone, or tablet simultaneously.
-      // We still update or insert the binding row for audit visibility in the portal.
-      if (binding) {
-        await supabase
-          .from("admin_key_bindings")
-          .update({
-            last_used: new Date().toISOString(),
-            user_agent: userAgentHeader,
-            device_fingerprint: deviceFingerprint,
-          })
-          .eq("admin_key_hash", keyHash);
-      } else {
-        await supabase
-          .from("admin_key_bindings")
-          .insert({
-            admin_key_hash: keyHash,
-            device_id: deviceId,
-            user_agent: userAgentHeader,
-            device_fingerprint: deviceFingerprint,
-          });
+    if (binding) {
+      // Key already bound — check device match via cookie OR fingerprint
+      const cookieMatch = binding.device_id === deviceId;
+      const fingerprintMatch = binding.device_fingerprint && binding.device_fingerprint === deviceFingerprint;
+
+      if (!cookieMatch && !fingerprintMatch) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              role === "master"
+                ? "This master key is already bound to another device. Reset the binding in the dashboard on the other device, or delete the binding in database."
+                : "This key is already bound to another device. Contact the system administrator to revoke the binding.",
+          },
+          { status: 403 }
+        );
       }
+
+      // If cookie was lost but fingerprint matched, restore the cookie device ID
+      if (!cookieMatch && fingerprintMatch) {
+        deviceId = binding.device_id;
+      }
+
+      // Device matches — update last_used and fingerprint
+      await supabase
+        .from("admin_key_bindings")
+        .update({
+          last_used: new Date().toISOString(),
+          user_agent: userAgentHeader,
+          device_fingerprint: deviceFingerprint,
+        })
+        .eq("admin_key_hash", keyHash);
     } else {
-      // Normal admin keys enforce strict single-device limit
-      if (binding) {
-        // Key already bound — check device match via cookie OR fingerprint
-        const cookieMatch = binding.device_id === deviceId;
-        const fingerprintMatch = binding.device_fingerprint && binding.device_fingerprint === deviceFingerprint;
+      // First use — bind this key to this device with fingerprint
+      const { error: insertError } = await supabase
+        .from("admin_key_bindings")
+        .insert({
+          admin_key_hash: keyHash,
+          device_id: deviceId,
+          user_agent: userAgentHeader,
+          device_fingerprint: deviceFingerprint,
+        });
 
-        if (!cookieMatch && !fingerprintMatch) {
-          return NextResponse.json(
-            {
-              success: false,
-              message:
-                "This key is already bound to another device. Contact the system administrator to revoke the binding.",
-            },
-            { status: 403 }
-          );
-        }
-
-        // If cookie was lost but fingerprint matched, restore the cookie device ID
-        if (!cookieMatch && fingerprintMatch) {
-          deviceId = binding.device_id;
-        }
-
-        // Device matches — update last_used and fingerprint
-        await supabase
-          .from("admin_key_bindings")
-          .update({
-            last_used: new Date().toISOString(),
-            user_agent: userAgentHeader,
-            device_fingerprint: deviceFingerprint,
-          })
-          .eq("admin_key_hash", keyHash);
-      } else {
-        // First use — bind this key to this device with fingerprint
-        const { error: insertError } = await supabase
-          .from("admin_key_bindings")
-          .insert({
-            admin_key_hash: keyHash,
-            device_id: deviceId,
-            user_agent: userAgentHeader,
-            device_fingerprint: deviceFingerprint,
-          });
-
-        if (insertError) {
-          console.error("Failed to bind key to device:", insertError);
-          return NextResponse.json(
-            { success: false, message: "Failed to register device" },
-            { status: 500 }
-          );
-        }
+      if (insertError) {
+        console.error("Failed to bind key to device:", insertError);
+        return NextResponse.json(
+          { success: false, message: "Failed to register device" },
+          { status: 500 }
+        );
       }
     }
 
     // 5. Create JWT token
-    const token = await signToken({ ip, role, deviceId });
+    const token = await signToken({ ip, role, deviceId, keyHash });
 
     // 6. Set cookies
     const response = NextResponse.json(

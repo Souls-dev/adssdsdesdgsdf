@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth-utils";
+import { verifyAdminRequest } from "@/lib/auth-utils";
 import {
   readFarmhouses,
   addFarmhouse,
@@ -11,11 +11,8 @@ import {
 
 // Helper to verify admin auth
 async function verifyAdmin(request: NextRequest) {
-  const token = request.cookies.get("admin_token")?.value;
-  if (!token) return false;
-  const payload = await verifyToken(token);
-  if (!payload) return false;
-  return true;
+  const auth = await verifyAdminRequest(request);
+  return auth.authenticated;
 }
 
 // GET — List all farmhouses (admin sees all)

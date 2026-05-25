@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth-utils";
+import { verifyAdminRequest } from "@/lib/auth-utils";
 import {
   readSettings,
   writeSettings,
@@ -12,18 +12,6 @@ import {
 } from "@/lib/site-settings-data";
 import { rateLimit } from "@/lib/rateLimit";
 
-async function verifyAdmin(request: NextRequest): Promise<{ authenticated: boolean; role?: string }> {
-  const token = request.cookies.get("admin_token")?.value;
-  if (!token) return { authenticated: false };
-  try {
-    const payload = await verifyToken(token);
-    if (!payload) return { authenticated: false };
-    return { authenticated: true, role: (payload.role as string) || "admin" };
-  } catch {
-    return { authenticated: false };
-  }
-}
-
 function getIp(request: NextRequest) {
   return (
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -34,9 +22,9 @@ function getIp(request: NextRequest) {
 
 // GET — return current settings
 export async function GET(request: NextRequest) {
-  const auth = await verifyAdmin(request);
+  const auth = await verifyAdminRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: 401 });
   }
 
   const limiter = rateLimit(getIp(request), "admin-api");
@@ -58,9 +46,9 @@ export async function GET(request: NextRequest) {
 
 // PUT — update settings (partial merge, permanent save)
 export async function PUT(request: NextRequest) {
-  const auth = await verifyAdmin(request);
+  const auth = await verifyAdminRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: 401 });
   }
 
   const limiter = rateLimit(getIp(request), "admin-api");
@@ -88,9 +76,9 @@ export async function PUT(request: NextRequest) {
 
 // PATCH — theme preview operations
 export async function PATCH(request: NextRequest) {
-  const auth = await verifyAdmin(request);
+  const auth = await verifyAdminRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: 401 });
   }
 
   const limiter = rateLimit(getIp(request), "admin-api");
@@ -139,9 +127,9 @@ export async function PATCH(request: NextRequest) {
 
 // DELETE — reset to factory defaults
 export async function DELETE(request: NextRequest) {
-  const auth = await verifyAdmin(request);
+  const auth = await verifyAdminRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: auth.error || "Unauthorized" }, { status: 401 });
   }
 
   try {

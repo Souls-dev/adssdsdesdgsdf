@@ -7,6 +7,7 @@ export async function POST() {
   );
 
   response.cookies.delete("admin_token");
+  response.cookies.delete("admin_device_id");
 
   return response;
 }
