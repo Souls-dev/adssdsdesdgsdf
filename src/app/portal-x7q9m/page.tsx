@@ -300,7 +300,7 @@ export default function AdminPage() {
     if (isMasterKey) {
       if (!confirm("Reset the device binding for this master key?")) return;
     } else {
-      if (!confirm("Revoke this admin key? The user will be locked out.")) return;
+      if (!confirm("Revoke this admin key? The user will be locked out immediately.")) return;
     }
     try {
       const res = await fetch(`/api/admin/keys?id=${keyId}&action=revoke`, { method: "DELETE" });
@@ -309,10 +309,39 @@ export default function AdminPage() {
         if (isMasterKey) {
           fetchData();
         } else {
-          setAdminKeys((prev) => prev.map((k) => k.id === keyId ? { ...k, revoked: true, revoked_at: new Date().toISOString(), device_bound: false } : k));
+          setAdminKeys((prev) => prev.map((k) => k.id === keyId ? { ...k, revoked: true, revoked_at: new Date().toISOString(), device_bound: false, device_user_agent: null, device_last_used: null } : k));
         }
         showMsg(isMasterKey ? "Master key device binding reset successfully!" : "Key revoked!", "success");
       } else { showMsg(data.error || "Failed to revoke", "error"); }
+    } catch { showMsg("Network error", "error"); }
+  };
+
+  const handleResetBinding = async (keyId: string) => {
+    const isMasterKey = keyId.startsWith("master-");
+    if (!confirm(isMasterKey ? "Reset the device binding for this master key?" : "Reset the device binding for this admin key? They will need to sign in again to bind their new device.")) return;
+    try {
+      const res = await fetch(`/api/admin/keys?id=${keyId}&action=reset-binding`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        if (isMasterKey) {
+          fetchData();
+        } else {
+          setAdminKeys((prev) => prev.map((k) => k.id === keyId ? { ...k, device_bound: false, device_user_agent: null, device_last_used: null } : k));
+        }
+        showMsg("Device binding reset successfully!", "success");
+      } else { showMsg(data.error || "Failed to reset binding", "error"); }
+    } catch { showMsg("Network error", "error"); }
+  };
+
+  const handleUnrevokeKey = async (keyId: string) => {
+    if (!confirm("Unrevoke this admin key? They will be allowed to log in and bind a device again.")) return;
+    try {
+      const res = await fetch(`/api/admin/keys?id=${keyId}&action=unrevoke`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setAdminKeys((prev) => prev.map((k) => k.id === keyId ? { ...k, revoked: false, revoked_at: null, device_bound: false, device_user_agent: null, device_last_used: null } : k));
+        showMsg("Key unrevoked successfully!", "success");
+      } else { showMsg(data.error || "Failed to unrevoke", "error"); }
     } catch { showMsg("Network error", "error"); }
   };
 
@@ -1356,16 +1385,24 @@ export default function AdminPage() {
                        <div className="flex gap-2 ml-3">
                          {isMasterKey ? (
                            k.device_bound && (
-                             <button onClick={() => handleRevokeKey(k.id)}
+                             <button onClick={() => handleResetBinding(k.id)}
                                className="rounded-lg bg-amber-950/50 border border-amber-800 px-3 py-1.5 text-xs text-amber-400 transition hover:bg-amber-900/30">
                                Reset Bounding
                              </button>
                            )
                          ) : (
-                           <button onClick={() => handleRevokeKey(k.id)}
-                             className="rounded-lg bg-red-950/50 border border-red-800 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-900/30">
-                             Revoke
-                           </button>
+                           <>
+                             {k.device_bound && (
+                               <button onClick={() => handleResetBinding(k.id)}
+                                 className="rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition hover:bg-zinc-700">
+                                 Reset Bounding
+                               </button>
+                             )}
+                             <button onClick={() => handleRevokeKey(k.id)}
+                               className="rounded-lg bg-red-950/50 border border-red-800 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-900/30">
+                               Revoke
+                             </button>
+                           </>
                          )}
                        </div>
                      </div>
@@ -1389,10 +1426,16 @@ export default function AdminPage() {
                       <p className="text-xs font-mono text-zinc-600">{k.key_hash_short}</p>
                       {k.revoked_at && <p className="text-[10px] text-zinc-700 mt-1">Revoked: {new Date(k.revoked_at).toLocaleDateString()}</p>}
                     </div>
-                    <button onClick={() => handleDeleteKey(k.id)}
-                      className="ml-3 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-red-400">
-                      <Trash2 size={12} />
-                    </button>
+                    <div className="flex gap-2 ml-3">
+                      <button onClick={() => handleUnrevokeKey(k.id)}
+                        className="rounded-lg bg-emerald-950/50 border border-emerald-800 px-3 py-1.5 text-xs text-emerald-400 transition hover:bg-emerald-900/30">
+                        Unrevoke
+                      </button>
+                      <button onClick={() => handleDeleteKey(k.id)}
+                        className="rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-1.5 text-xs text-zinc-400 transition hover:bg-zinc-700 hover:text-red-400">
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

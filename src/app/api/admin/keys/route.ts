@@ -181,6 +181,30 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({ error: "Failed to delete key" }, { status: 500 });
       }
       return NextResponse.json({ success: true, message: "Key deleted permanently" });
+    } else if (action === "unrevoke") {
+      // Unrevoke — mark as active again (revoked: false)
+      const { error } = await supabase
+        .from("admin_keys")
+        .update({ revoked: false, revoked_at: null })
+        .eq("id", keyId);
+
+      if (error) {
+        return NextResponse.json({ error: "Failed to unrevoke key" }, { status: 500 });
+      }
+      return NextResponse.json({ success: true, message: "Key unrevoked" });
+    } else if (action === "reset-binding") {
+      // Reset binding — remove device binding from admin_key_bindings without revoking key
+      const { data: keyData } = await supabase
+        .from("admin_keys")
+        .select("key_hash")
+        .eq("id", keyId)
+        .single();
+
+      if (keyData) {
+        await supabase.from("admin_key_bindings").delete().eq("admin_key_hash", keyData.key_hash);
+        return NextResponse.json({ success: true, message: "Device binding reset" });
+      }
+      return NextResponse.json({ error: "Key not found" }, { status: 404 });
     } else {
       // Revoke — mark as revoked and remove device binding
       const { data: keyData } = await supabase
