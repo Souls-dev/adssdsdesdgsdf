@@ -2,33 +2,37 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { FARMHOUSES, type FarmhouseType } from "@/data/farmhouses";
+import {
+  readAvailableFarmhouses,
+  getFarmhouseById,
+  type FarmhouseData,
+} from "@/lib/farmhouse-data";
 import {
   MapPin, Bed, Bath, Users, Shield, Zap, Waves,
   TreePine, MessageCircle, ChevronRight, Star, Phone,
 } from "lucide-react";
 
+/* ── ISR: revalidate every 60s so CMS changes (images, pricing) go live fast ── */
+export const revalidate = 60;
+
 /* ═══════════════════════════════════════════════════════════
    STATIC GENERATION — Pre-render every farmhouse at build
    ═══════════════════════════════════════════════════════════ */
-export function generateStaticParams() {
-  return FARMHOUSES.map((f) => ({ slug: f.id }));
+export async function generateStaticParams() {
+  const farmhouses = await readAvailableFarmhouses();
+  return farmhouses.map((f) => ({ slug: f.id }));
 }
 
 /* ═══════════════════════════════════════════════════════════
    DYNAMIC METADATA — SEO-optimised per farmhouse
    ═══════════════════════════════════════════════════════════ */
-function getFarmhouse(slug: string): FarmhouseType | undefined {
-  return FARMHOUSES.find((f) => f.id === slug);
-}
-
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const farm = getFarmhouse(slug);
+  const farm = await getFarmhouseById(slug);
   if (!farm) return {};
 
   const title = `${farm.name} — Book in Karachi | Al Jannat`.slice(0, 60);
@@ -51,20 +55,22 @@ export async function generateMetadata({
       type: "website",
       locale: "en_PK",
       siteName: "Al Jannat Farmhouse Booking Agency",
-      images: [
-        {
-          url: farm.coverImage,
-          width: 1200,
-          height: 630,
-          alt: `${farm.name} — Al Jannat Farmhouse Karachi`,
-        },
-      ],
+      images: farm.coverImage
+        ? [
+            {
+              url: farm.coverImage,
+              width: 1200,
+              height: 630,
+              alt: `${farm.name} — Al Jannat Farmhouse Karachi`,
+            },
+          ]
+        : [],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [farm.coverImage],
+      images: farm.coverImage ? [farm.coverImage] : [],
     },
   };
 }
@@ -91,7 +97,7 @@ function getAmenityIcon(amenity: string) {
 /* ═══════════════════════════════════════════════════════════
    LOCALIZED COPY GENERATOR (250+ words, keyword-rich)
    ═══════════════════════════════════════════════════════════ */
-function generateLocalizedCopy(farm: FarmhouseType): string {
+function generateLocalizedCopy(farm: FarmhouseData): string {
   const hasPool = farm.amenities.some((a) =>
     a.toLowerCase().includes("pool") || a.toLowerCase().includes("swim")
   );
@@ -128,8 +134,8 @@ ${farm.name} is the ideal venue for family picnics, birthday celebrations, engag
 /* ═══════════════════════════════════════════════════════════
    JSON-LD STRUCTURED DATA
    ═══════════════════════════════════════════════════════════ */
-function buildJsonLd(farm: FarmhouseType) {
-  return {
+function buildJsonLd(farm: FarmhouseData) {
+  const jsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@graph": [
       {
@@ -138,9 +144,15 @@ function buildJsonLd(farm: FarmhouseType) {
         name: farm.name,
         description: farm.shortDescription,
         url: `https://aljannatfarms.com/${farm.id}`,
-        image: `https://aljannatfarms.com${farm.coverImage}`,
+        ...(farm.coverImage
+          ? { image: `https://aljannatfarms.com${farm.coverImage}` }
+          : {}),
         telephone: ["+922134548555", "+923332272020"],
-        priceRange: `PKR ${farm.pricePerNight.toLocaleString()} - PKR ${(farm.pricePerNight + farm.weekendSurcharge).toLocaleString()}`,
+        ...(farm.pricingEnabled
+          ? {
+              priceRange: `PKR ${farm.pricePerNight.toLocaleString()} - PKR ${(farm.pricePerNight + farm.weekendSurcharge).toLocaleString()}`,
+            }
+          : {}),
         currenciesAccepted: "PKR",
         paymentAccepted: "Cash, Bank Transfer",
         address: {
@@ -181,6 +193,7 @@ function buildJsonLd(farm: FarmhouseType) {
       },
     ],
   };
+  return jsonLd;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -192,7 +205,7 @@ export default async function FarmhousePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const farm = getFarmhouse(slug);
+  const farm = await getFarmhouseById(slug);
   if (!farm) notFound();
 
   const jsonLd = buildJsonLd(farm);
@@ -201,6 +214,9 @@ export default async function FarmhousePage({
     `Hi Al Jannat! I'd like to book ${farm.name}. Please share availability & rates.`
   );
   const whatsappUrl = `https://wa.me/+923332272020?text=${whatsappMsg}`;
+
+  const hasImages = farm.images && farm.images.length > 0;
+  const hasCoverImage = !!farm.coverImage;
 
   return (
     <>
@@ -215,15 +231,21 @@ export default async function FarmhousePage({
       {/* ── HERO ─────────────────────────────────────── */}
       <section className="relative min-h-[60vh] flex items-end overflow-hidden bg-brown-950">
         <div className="absolute inset-0">
-          <Image
-            src={farm.coverImage}
-            alt={`${farm.name} — Premium Farmhouse in Karachi`}
-            fill
-            className="object-cover"
-            sizes="100vw"
-            priority
-            unoptimized
-          />
+          {hasCoverImage ? (
+            <Image
+              src={farm.coverImage}
+              alt={`${farm.name} — Premium Farmhouse in Karachi`}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority
+              unoptimized
+            />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-brown-950 via-brown-900 to-forest-950">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(252,211,77,0.06),transparent_70%)]" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-brown-950 via-brown-950/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-brown-900/50 to-transparent" />
         </div>
@@ -234,10 +256,7 @@ export default async function FarmhousePage({
             aria-label="Breadcrumb"
             className="mb-6 flex items-center gap-2 text-sm text-cream-100/60"
           >
-            <Link
-              href="/"
-              className="transition-colors hover:text-cream-300"
-            >
+            <Link href="/" className="transition-colors hover:text-cream-300">
               Home
             </Link>
             <ChevronRight size={14} />
@@ -357,19 +376,22 @@ export default async function FarmhousePage({
                   Location &amp; Directions
                 </h2>
                 <div className="rounded-2xl border border-amber-800/8 bg-white p-6 shadow-sm sm:p-8">
-                  {localizedCopy.split("\n\n").filter(Boolean).map((para, i) => (
-                    <p
-                      key={i}
-                      className="mb-4 text-sm leading-relaxed text-amber-900/75 last:mb-0 sm:text-base"
-                    >
-                      {para}
-                    </p>
-                  ))}
+                  {localizedCopy
+                    .split("\n\n")
+                    .filter(Boolean)
+                    .map((para, i) => (
+                      <p
+                        key={i}
+                        className="mb-4 text-sm leading-relaxed text-amber-900/75 last:mb-0 sm:text-base"
+                      >
+                        {para}
+                      </p>
+                    ))}
                 </div>
               </section>
 
-              {/* Image Gallery */}
-              {farm.images.length > 1 && (
+              {/* Image Gallery — only if images exist */}
+              {hasImages && farm.images.length > 1 && (
                 <section>
                   <h2
                     className="mb-6 text-2xl font-bold text-brown-800 sm:text-3xl"
@@ -401,24 +423,43 @@ export default async function FarmhousePage({
             {/* Right Sidebar — Booking Card */}
             <div className="lg:col-span-1">
               <div className="sticky top-6 space-y-6">
-                {/* Price Card */}
+                {/* Price / Contact Card */}
                 <div className="overflow-hidden rounded-2xl border border-amber-800/10 bg-white shadow-lg">
                   <div className="bg-gradient-to-r from-amber-700 to-amber-800 px-6 py-5">
-                    <p className="text-sm font-medium text-cream-100/80">
-                      Starting from
-                    </p>
-                    <p
-                      className="text-3xl font-bold text-white"
-                      style={{ fontFamily: "var(--font-heading)" }}
-                    >
-                      PKR {farm.pricePerNight.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-cream-100/60">per night</p>
-                    {farm.weekendSurcharge > 0 && (
-                      <p className="mt-1 text-xs text-cream-300">
-                        +PKR {farm.weekendSurcharge.toLocaleString()} weekend
-                        surcharge
-                      </p>
+                    {farm.pricingEnabled ? (
+                      <>
+                        <p className="text-sm font-medium text-cream-100/80">
+                          Starting from
+                        </p>
+                        <p
+                          className="text-3xl font-bold text-white"
+                          style={{ fontFamily: "var(--font-heading)" }}
+                        >
+                          PKR {farm.pricePerNight.toLocaleString()}
+                        </p>
+                        <p className="text-sm text-cream-100/60">per night</p>
+                        {farm.weekendSurcharge > 0 && (
+                          <p className="mt-1 text-xs text-cream-300">
+                            +PKR {farm.weekendSurcharge.toLocaleString()} weekend
+                            surcharge
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-medium text-cream-100/80">
+                          Pricing
+                        </p>
+                        <p
+                          className="text-2xl font-bold text-white"
+                          style={{ fontFamily: "var(--font-heading)" }}
+                        >
+                          Contact for Rates
+                        </p>
+                        <p className="mt-1 text-sm text-cream-100/60">
+                          Get a custom quote via WhatsApp
+                        </p>
+                      </>
                     )}
                   </div>
 
@@ -462,23 +503,43 @@ export default async function FarmhousePage({
                     Pricing &amp; Availability
                   </h3>
                   <div className="space-y-3 text-sm text-amber-900/70">
-                    <div className="flex justify-between">
-                      <span>Weekday Rate</span>
-                      <span className="font-semibold text-brown-800">
-                        PKR {farm.pricePerNight.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="h-px bg-amber-800/8" />
-                    <div className="flex justify-between">
-                      <span>Weekend Rate</span>
-                      <span className="font-semibold text-brown-800">
-                        PKR{" "}
-                        {(
-                          farm.pricePerNight + farm.weekendSurcharge
-                        ).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="h-px bg-amber-800/8" />
+                    {farm.pricingEnabled ? (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Weekday Rate</span>
+                          <span className="font-semibold text-brown-800">
+                            PKR {farm.pricePerNight.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="h-px bg-amber-800/8" />
+                        <div className="flex justify-between">
+                          <span>Weekend Rate</span>
+                          <span className="font-semibold text-brown-800">
+                            PKR{" "}
+                            {(
+                              farm.pricePerNight + farm.weekendSurcharge
+                            ).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="h-px bg-amber-800/8" />
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Rates</span>
+                          <a
+                            href={whatsappUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-[#25D366] hover:underline"
+                          >
+                            <MessageCircle size={12} />
+                            Contact Us
+                          </a>
+                        </div>
+                        <div className="h-px bg-amber-800/8" />
+                      </>
+                    )}
                     <div className="flex justify-between">
                       <span>Max Guests</span>
                       <span className="font-semibold text-brown-800">

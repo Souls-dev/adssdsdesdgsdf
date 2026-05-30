@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
-import { FARMHOUSES } from "@/data/farmhouses";
+import { readAvailableFarmhouses } from "@/lib/farmhouse-data";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://aljannatfarms.com";
+  const farmhouses = await readAvailableFarmhouses();
 
-  const farmhousePages: MetadataRoute.Sitemap = FARMHOUSES.map((farm) => ({
+  const farmhousePages: MetadataRoute.Sitemap = farmhouses.map((farm) => ({
     url: `${baseUrl}/${farm.id}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
