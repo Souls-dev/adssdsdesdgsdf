@@ -929,6 +929,128 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Favicon Manager */}
+              <div className="border-t border-zinc-800 pt-6">
+                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-zinc-400">🌐 Favicon (Browser Tab Icon)</h3>
+                <p className="text-xs text-zinc-500 mb-4">Upload a custom favicon image and adjust its size within the browser tab. Changes are reflected after saving.</p>
+
+                <div className="grid gap-6 lg:grid-cols-2">
+                  {/* Controls */}
+                  <div className="space-y-4">
+                    {/* Upload / URL */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-zinc-400">Favicon Image</label>
+                      <div className="flex items-center gap-3">
+                        <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-zinc-700 px-4 py-2.5 text-zinc-500 transition hover:border-amber-500 hover:text-amber-400 bg-zinc-900">
+                          <Upload size={14} className="mr-2" /> Upload Favicon
+                          <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" className="hidden" onChange={async (e) => {
+                            if (!e.target.files?.length) return;
+                            const file = e.target.files[0];
+                            const fd = new FormData();
+                            fd.append("file", file);
+                            fd.append("farmhouseId", "site-favicon");
+                            showMsg("Uploading favicon...", "success");
+                            try {
+                              const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+                              const data = await res.json();
+                              if (data.success) {
+                                setSettings({ ...settings, theme: { ...settings.theme, faviconUrl: data.path } });
+                                showMsg("Favicon uploaded! Adjust size and save.", "success");
+                              } else { showMsg(data.error || "Upload failed", "error"); }
+                            } catch { showMsg("Upload failed", "error"); }
+                          }} />
+                        </label>
+                      </div>
+                      {settings.theme.faviconUrl && (
+                        <div className="mt-2">
+                          <label className="mb-1 block text-[10px] text-zinc-500">Or paste an image URL</label>
+                          <input
+                            type="text"
+                            value={settings.theme.faviconUrl || ""}
+                            onChange={(e) => setSettings({ ...settings, theme: { ...settings.theme, faviconUrl: e.target.value } })}
+                            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs text-white font-mono focus:border-amber-500 focus:outline-none"
+                            placeholder="/logo/al-jannat-logo.png"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Padding Slider */}
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-zinc-400">
+                        Icon Padding (Size Control) — <span className="text-amber-400 font-mono">{settings.theme.faviconPadding ?? 12}%</span>
+                      </label>
+                      <p className="text-[10px] text-zinc-600 mb-2">Lower = larger icon, Higher = more breathing room around the icon</p>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] text-zinc-500 w-6">0%</span>
+                        <input
+                          type="range"
+                          min={0}
+                          max={45}
+                          step={1}
+                          value={settings.theme.faviconPadding ?? 12}
+                          onChange={(e) => setSettings({ ...settings, theme: { ...settings.theme, faviconPadding: Number(e.target.value) } })}
+                          className="flex-1 h-2 rounded-lg appearance-none bg-zinc-700 accent-amber-500 cursor-pointer"
+                        />
+                        <span className="text-[10px] text-zinc-500 w-8">45%</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={45}
+                          value={settings.theme.faviconPadding ?? 12}
+                          onChange={(e) => setSettings({ ...settings, theme: { ...settings.theme, faviconPadding: Math.min(45, Math.max(0, Number(e.target.value))) } })}
+                          className="w-16 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-xs text-white text-center font-mono focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Preview */}
+                  <div>
+                    <label className="mb-2 block text-xs font-medium text-zinc-400">Live Preview</label>
+                    <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 p-4">
+                      {/* Simulated browser tab */}
+                      <div className="rounded-t-lg bg-zinc-700/50 px-3 pt-2 pb-0">
+                        <div className="inline-flex items-center gap-2 rounded-t-lg bg-zinc-800 px-3 py-1.5 border-t border-l border-r border-zinc-600">
+                          <div
+                            className="h-4 w-4 rounded-sm overflow-hidden flex items-center justify-center bg-white"
+                            style={{ padding: `${(settings.theme.faviconPadding ?? 12) * 0.16}px` }}
+                          >
+                            {settings.theme.faviconUrl ? (
+                              <img src={settings.theme.faviconUrl} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <div className="w-full h-full bg-zinc-400 rounded-[1px]" />
+                            )}
+                          </div>
+                          <span className="text-[10px] text-zinc-300 truncate max-w-[120px]">Al Jannat Farmho...</span>
+                          <span className="text-zinc-500 text-[9px] ml-1">×</span>
+                        </div>
+                      </div>
+                      <div className="h-8 rounded-b-lg bg-zinc-700/30 border-t border-zinc-600/50 flex items-center px-3">
+                        <span className="text-[9px] text-zinc-500 font-mono">aljannatfarms.com</span>
+                      </div>
+
+                      {/* Larger preview */}
+                      <div className="mt-4 flex items-center justify-center">
+                        <div className="text-center">
+                          <div
+                            className="mx-auto h-16 w-16 rounded-xl overflow-hidden flex items-center justify-center bg-white border border-zinc-600 shadow-lg"
+                            style={{ padding: `${(settings.theme.faviconPadding ?? 12) * 0.64}px` }}
+                          >
+                            {settings.theme.faviconUrl ? (
+                              <img src={settings.theme.faviconUrl} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <div className="w-full h-full bg-zinc-300 rounded" />
+                            )}
+                          </div>
+                          <p className="mt-2 text-[10px] text-zinc-500">Enlarged preview (4x)</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Loading Screen Customizer */}
               <div className="border-t border-zinc-800 pt-6">
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Loading Screen Theme</h3>

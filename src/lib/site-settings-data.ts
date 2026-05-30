@@ -7,6 +7,8 @@ export type SiteSettings = {
     heroTheme: string;
     logoUrl: string;
     loaderStyle?: string;
+    faviconUrl?: string;
+    faviconPadding?: number;
   };
   hero: {
     badgeText: string;
@@ -73,7 +75,7 @@ export type SiteSettings = {
 
 /** Hardcoded factory defaults — used for reset */
 const DEFAULT_SETTINGS: SiteSettings = {
-  theme: { activeColorPreset: "gold", customColors: {}, heroTheme: "theme1", logoUrl: "/logo/al-jannat-logo.png", loaderStyle: "monogram" },
+  theme: { activeColorPreset: "gold", customColors: {}, heroTheme: "theme1", logoUrl: "/logo/al-jannat-logo.png", loaderStyle: "monogram", faviconUrl: "/logo/al-jannat-logo.png", faviconPadding: 12 },
   hero: {
     badgeText: "32+ Years of Excellence",
     headline: "Welcome to",

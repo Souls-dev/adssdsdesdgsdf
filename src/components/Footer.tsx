@@ -176,6 +176,24 @@ export default function Footer({ settings }: FooterProps) {
           </p>
         </div>
       </div>
+
+      {/* Agency Watermark */}
+      <div className="border-t border-cream-100/5 bg-brown-950/50">
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+          <p className="text-center text-[11px] text-cream-100/30 flex items-center justify-center gap-1.5">
+            Powered By{" "}
+            <a
+              href="https://cybrox.info"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-semibold text-cream-100/50 transition-colors duration-200 hover:text-cream-300"
+            >
+              <Globe size={12} />
+              Cybrox
+            </a>
+          </p>
+        </div>
+      </div>
     </footer>
   );
 }
