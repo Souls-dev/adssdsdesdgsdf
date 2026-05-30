@@ -75,7 +75,7 @@ export type SiteSettings = {
 
 /** Hardcoded factory defaults — used for reset */
 const DEFAULT_SETTINGS: SiteSettings = {
-  theme: { activeColorPreset: "gold", customColors: {}, heroTheme: "theme1", logoUrl: "/logo/al-jannat-logo.png", loaderStyle: "monogram", faviconUrl: "/logo/al-jannat-logo.png", faviconPadding: 12 },
+  theme: { activeColorPreset: "gold", customColors: {}, heroTheme: "theme1", logoUrl: "/logo/al-jannat-logo.png", loaderStyle: "monogram", faviconUrl: "/logo/al-jannat-logo.png", faviconPadding: 100 },
   hero: {
     badgeText: "32+ Years of Excellence",
     headline: "Welcome to",

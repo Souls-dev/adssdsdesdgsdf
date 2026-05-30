@@ -975,30 +975,31 @@ export default function AdminPage() {
                       )}
                     </div>
 
-                    {/* Padding Slider */}
+                    {/* Icon Size Slider */}
                     <div>
                       <label className="mb-1 block text-xs font-medium text-zinc-400">
-                        Icon Padding (Size Control) — <span className="text-amber-400 font-mono">{settings.theme.faviconPadding ?? 12}%</span>
+                        Icon Size — <span className="text-amber-400 font-mono">{settings.theme.faviconPadding ?? 100}%</span>
                       </label>
-                      <p className="text-[10px] text-zinc-600 mb-2">Lower = larger icon, Higher = more breathing room around the icon</p>
+                      <p className="text-[10px] text-zinc-600 mb-2">Drag right to make the icon bigger. At 100% it fits exactly. Above 100% it zooms in.</p>
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-zinc-500 w-6">0%</span>
+                        <span className="text-[10px] text-zinc-500 w-8">50%</span>
                         <input
                           type="range"
-                          min={0}
-                          max={45}
-                          step={1}
-                          value={settings.theme.faviconPadding ?? 12}
+                          min={50}
+                          max={200}
+                          step={5}
+                          value={settings.theme.faviconPadding ?? 100}
                           onChange={(e) => setSettings({ ...settings, theme: { ...settings.theme, faviconPadding: Number(e.target.value) } })}
                           className="flex-1 h-2 rounded-lg appearance-none bg-zinc-700 accent-amber-500 cursor-pointer"
                         />
-                        <span className="text-[10px] text-zinc-500 w-8">45%</span>
+                        <span className="text-[10px] text-zinc-500 w-8">200%</span>
                         <input
                           type="number"
-                          min={0}
-                          max={45}
-                          value={settings.theme.faviconPadding ?? 12}
-                          onChange={(e) => setSettings({ ...settings, theme: { ...settings.theme, faviconPadding: Math.min(45, Math.max(0, Number(e.target.value))) } })}
+                          min={50}
+                          max={200}
+                          step={5}
+                          value={settings.theme.faviconPadding ?? 100}
+                          onChange={(e) => setSettings({ ...settings, theme: { ...settings.theme, faviconPadding: Math.min(200, Math.max(50, Number(e.target.value))) } })}
                           className="w-16 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-xs text-white text-center font-mono focus:border-amber-500 focus:outline-none"
                         />
                       </div>
@@ -1013,11 +1014,20 @@ export default function AdminPage() {
                       <div className="rounded-t-lg bg-zinc-700/50 px-3 pt-2 pb-0">
                         <div className="inline-flex items-center gap-2 rounded-t-lg bg-zinc-800 px-3 py-1.5 border-t border-l border-r border-zinc-600">
                           <div
-                            className="h-4 w-4 rounded-sm overflow-hidden flex items-center justify-center bg-white"
-                            style={{ padding: `${(settings.theme.faviconPadding ?? 12) * 0.16}px` }}
+                            className="h-4 w-4 rounded-sm overflow-hidden flex items-center justify-center"
+                            style={{ background: "repeating-conic-gradient(#3f3f46 0% 25%, #27272a 0% 50%) 50% / 6px 6px" }}
                           >
                             {settings.theme.faviconUrl ? (
-                              <img src={settings.theme.faviconUrl} alt="" className="w-full h-full object-contain" />
+                              <img
+                                src={settings.theme.faviconUrl}
+                                alt=""
+                                className="object-contain"
+                                style={{
+                                  width: `${(settings.theme.faviconPadding ?? 100)}%`,
+                                  height: `${(settings.theme.faviconPadding ?? 100)}%`,
+                                  maxWidth: "none"
+                                }}
+                              />
                             ) : (
                               <div className="w-full h-full bg-zinc-400 rounded-[1px]" />
                             )}
@@ -1034,13 +1044,22 @@ export default function AdminPage() {
                       <div className="mt-4 flex items-center justify-center">
                         <div className="text-center">
                           <div
-                            className="mx-auto h-16 w-16 rounded-xl overflow-hidden flex items-center justify-center bg-white border border-zinc-600 shadow-lg"
-                            style={{ padding: `${(settings.theme.faviconPadding ?? 12) * 0.64}px` }}
+                            className="mx-auto h-16 w-16 rounded-xl overflow-hidden flex items-center justify-center border border-zinc-600 shadow-lg"
+                            style={{ background: "repeating-conic-gradient(#3f3f46 0% 25%, #27272a 0% 50%) 50% / 12px 12px" }}
                           >
                             {settings.theme.faviconUrl ? (
-                              <img src={settings.theme.faviconUrl} alt="" className="w-full h-full object-contain" />
+                              <img
+                                src={settings.theme.faviconUrl}
+                                alt=""
+                                className="object-contain"
+                                style={{
+                                  width: `${(settings.theme.faviconPadding ?? 100)}%`,
+                                  height: `${(settings.theme.faviconPadding ?? 100)}%`,
+                                  maxWidth: "none"
+                                }}
+                              />
                             ) : (
-                              <div className="w-full h-full bg-zinc-300 rounded" />
+                              <div className="w-3/4 h-3/4 bg-zinc-500 rounded" />
                             )}
                           </div>
                           <p className="mt-2 text-[10px] text-zinc-500">Enlarged preview (4x)</p>
