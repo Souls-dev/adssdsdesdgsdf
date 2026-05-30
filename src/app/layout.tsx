@@ -32,60 +32,85 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL("https://aljannatfarms.com"),
-    title: "Al Jannat Farmhouse | Premium Farmhouse Rentals & Event Venues in Pakistan",
+    title: {
+      default: "Al Jannat Farmhouse | Luxury Rentals Karachi",
+      template: "%s | Al Jannat Farmhouse",
+    },
     description:
-      "Book premium, luxury farmhouses in Karachi, Islamabad, Lahore, Multan, and Murree. Over 32 years of legacy in event management, weddings, corporate retreats, and family picnics.",
+      "Book luxury farmhouses in Karachi with private pools, 24/7 generator backup & security. Pakistan's trusted booking agency since 1994. 40+ premium venues.",
     keywords: [
       "Al Jannat Farmhouse",
       "Al Jannat Farmhouse Karachi",
+      "Al Jannat Farms",
+      "al jannat farmhouse booking agency",
+      "al jannat farmhouse contact number",
+      "farmhouse in karachi",
+      "best farmhouse in karachi for picnic",
+      "farmhouses in karachi with swimming pool",
+      "luxury farmhouse rental karachi",
+      "farmhouse booking karachi",
+      "farmhouse for wedding in karachi",
+      "corporate retreat farmhouses karachi",
+      "farmhouse rates in karachi 2026",
+      "cheap farmhouse in karachi for day picnic",
+      "overnight stay farmhouse karachi",
+      "farmhouse catering services karachi",
+      "casa de fazenda farmhouse booking",
+      "shayan farmhouse karachi booking",
+      "green paradise resort booking",
       "farmhouse rental Pakistan",
       "luxury farmhouse Islamabad",
       "farmhouse booking Lahore",
-      "best farmhouse in karachi for picnic",
-      "farmhouses in Karachi with swimming pool",
       "wedding venue farmhouse Pakistan",
       "corporate event venue Karachi",
       "luxury farmhouses Pakistan",
       "farmhouse Murree booking",
-      "Al Jannat farms contact number",
       "picnic spots Karachi",
-      "farmhouse rentals Multan"
+      "farmhouse rentals Multan",
+      "farmhouse booking office hill park",
+      "how to book farmhouse in karachi",
     ],
     alternates: {
       canonical: "https://aljannatfarms.com",
     },
     openGraph: {
-      title: "Al Jannat Farmhouse | Premium Farmhouse Rentals & Event Venues in Pakistan",
+      title: "Al Jannat Farmhouse | Luxury Rentals & Event Venues Karachi",
       description:
-        "Experience Pakistan's most premium luxury farmhouses. Perfect for weddings, events, family picnics, and corporate retreats with 24/7 power backup and private pools.",
+        "40+ premium farmhouses with private pools, generator backup & 24/7 security. Trusted by 10,000+ families since 1994. Book weddings, picnics & corporate retreats.",
       url: "https://aljannatfarms.com",
       type: "website",
       locale: "en_PK",
-      siteName: "Al Jannat Farmhouse",
+      siteName: "Al Jannat Farmhouse Booking Agency",
       images: [
         {
           url: "/logo/al-jannat-logo.png",
           width: 1200,
           height: 630,
-          alt: "Al Jannat Farmhouse Booking Agency"
-        }
-      ]
+          alt: "Al Jannat Farmhouse — Pakistan's Premier Farmhouse Booking Agency Since 1994",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Al Jannat Farmhouse | Premium Farmhouse Rentals & Event Venues in Pakistan",
-      description: "Book luxury farmhouses across Pakistan with private pools, robust security, and full catering. Over 30 years of hospitality legacy.",
+      title: "Al Jannat Farmhouse | Luxury Rentals Karachi",
+      description:
+        "40+ luxury farmhouses in Karachi with private pools & full catering. Over 32 years of trusted hospitality. Book now via WhatsApp.",
       images: ["/logo/al-jannat-logo.png"],
+      creator: "@aljannatfarms",
     },
     icons: {
       icon: [
         { url: "/favicon.ico?v=2", type: "image/x-icon" },
         { url: "/favicon-16x16.png?v=2", sizes: "16x16", type: "image/png" },
-        { url: "/favicon-32x32.png?v=2", sizes: "32x32", type: "image/png" }
+        { url: "/favicon-32x32.png?v=2", sizes: "32x32", type: "image/png" },
       ],
       apple: [
-        { url: "/apple-touch-icon.png?v=2", sizes: "180x180", type: "image/png" }
-      ]
+        {
+          url: "/apple-touch-icon.png?v=2",
+          sizes: "180x180",
+          type: "image/png",
+        },
+      ],
     },
     robots: {
       index: true,
@@ -98,6 +123,10 @@ export async function generateMetadata(): Promise<Metadata> {
         "max-snippet": -1,
       },
     },
+    // Uncomment and add your Google Search Console verification code:
+    // verification: {
+    //   google: "YOUR_GOOGLE_VERIFICATION_CODE",
+    // },
   };
 }
 
