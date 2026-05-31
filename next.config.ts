@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' https://ebcpihqssnufdtdiyold.supabase.co data: blob:",
               "connect-src 'self' https://ebcpihqssnufdtdiyold.supabase.co https://ajtestbackend-production.up.railway.app",
-              "frame-src https://maps.google.com https://maps.googleapis.com",
+              "frame-src https://maps.google.com https://www.google.com https://maps.googleapis.com https://www.google.com.pk",
             ].join("; "),
           },
         ],
