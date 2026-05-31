@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFAB from "@/components/WhatsAppFAB";
@@ -22,20 +22,22 @@ export default function HomeClient({ initialSettings }: HomeClientProps) {
   const [showLoader, setShowLoader] = useState(true);
   const [isLoaderExiting, setIsLoaderExiting] = useState(false);
 
-  // Apply color theme dynamically on load (immediately in render before paint)
-  if (typeof window !== "undefined" && settings?.theme) {
-    if (settings.theme.activeColorPreset) {
-      applyTheme(settings.theme.activeColorPreset);
+  // Apply color theme synchronously before browser paint (no flash of unstyled content)
+  useLayoutEffect(() => {
+    if (settings?.theme) {
+      if (settings.theme.activeColorPreset) {
+        applyTheme(settings.theme.activeColorPreset);
+      }
+      if (settings.theme.customColors && typeof settings.theme.customColors === "object") {
+        const root = document.documentElement;
+        Object.entries(settings.theme.customColors).forEach(([key, value]) => {
+          if (typeof value === "string" && key.startsWith("--color-")) {
+            root.style.setProperty(key, value);
+          }
+        });
+      }
     }
-    if (settings.theme.customColors && typeof settings.theme.customColors === "object") {
-      const root = document.documentElement;
-      Object.entries(settings.theme.customColors).forEach(([key, value]) => {
-        if (typeof value === "string" && key.startsWith("--color-")) {
-          root.style.setProperty(key, value);
-        }
-      });
-    }
-  }
+  }, [settings?.theme]);
 
   useEffect(() => {
     const startTime = Date.now();

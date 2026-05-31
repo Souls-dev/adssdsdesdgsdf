@@ -7,6 +7,26 @@ function getSecretKey() {
   return new TextEncoder().encode(secret);
 }
 
+// ── Strict CORS allowlist ────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  "https://aljannatfarms.com",
+  "https://www.aljannatfarms.com",
+  ...(process.env.NODE_ENV === "development" ? ["http://localhost:3000"] : []),
+];
+
+function isOriginAllowed(origin: string | null): boolean {
+  if (!origin) return false;
+  return ALLOWED_ORIGINS.includes(origin);
+}
+
+// ── Security headers applied to every response ───────────────
+function applySecurityHeaders(response: NextResponse): void {
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -52,22 +72,30 @@ export async function middleware(request: NextRequest) {
 
   // ── CORS for all API routes ────────────────────────────────
   if (pathname.startsWith("/api")) {
+    const origin = request.headers.get("origin");
+    const allowed = isOriginAllowed(origin);
+
     if (request.method === "OPTIONS") {
-      return new NextResponse(null, {
-        status: 200,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, x-api-key",
-          "Access-Control-Max-Age": "86400",
-        },
-      });
+      const preflightRes = new NextResponse(null, { status: 200 });
+      if (allowed) {
+        preflightRes.headers.set("Access-Control-Allow-Origin", origin!);
+        preflightRes.headers.set("Access-Control-Allow-Credentials", "true");
+      }
+      preflightRes.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+      preflightRes.headers.set("Access-Control-Allow-Headers", "Content-Type, x-api-key");
+      preflightRes.headers.set("Access-Control-Max-Age", "86400");
+      applySecurityHeaders(preflightRes);
+      return preflightRes;
     }
 
     const response = NextResponse.next();
-    response.headers.set("Access-Control-Allow-Origin", "*");
+    if (allowed) {
+      response.headers.set("Access-Control-Allow-Origin", origin!);
+      response.headers.set("Access-Control-Allow-Credentials", "true");
+    }
     response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     response.headers.set("Access-Control-Allow-Headers", "Content-Type, x-api-key");
+    applySecurityHeaders(response);
     return response;
   }
 

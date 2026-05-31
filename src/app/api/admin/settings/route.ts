@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, settings, preview, role: auth.role });
   } catch (err) {
     return NextResponse.json(
-      { error: "Failed to read settings", detail: String(err) },
+      { error: "Failed to read settings" },
       { status: 500 }
     );
   }
@@ -68,7 +68,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: true, settings: merged });
   } catch (err) {
     return NextResponse.json(
-      { error: "Failed to update settings", detail: String(err) },
+      { error: "Failed to update settings" },
       { status: 500 }
     );
   }
@@ -119,7 +119,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (err) {
     return NextResponse.json(
-      { error: "Failed to process preview action", detail: String(err) },
+      { error: "Failed to process preview action" },
       { status: 500 }
     );
   }

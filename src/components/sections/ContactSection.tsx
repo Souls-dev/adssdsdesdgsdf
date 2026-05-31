@@ -200,29 +200,6 @@ export default function ContactSection({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const trimmedName = formData.name.trim();
-
-    // ── Admin Login Intercept ────────────────────────────────
-    if (trimmedName && !trimmedName.includes(" ") && trimmedName.length >= 8 && !formData.number) {
-      setIsSubmitting(true);
-      try {
-        const loginRes = await fetch("/api/admin/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: trimmedName }),
-        });
-        
-        if (loginRes.ok) {
-          toast.success("Admin authenticated. Redirecting...");
-          window.location.href = "/portal-x7q9m";
-          return;
-        }
-      } catch (err) {
-        console.error(err);
-      }
-      setIsSubmitting(false);
-    }
-
     if (honeypot) {
       toast.success(
         "Booking inquiry received! We will contact you within 24 hours."
