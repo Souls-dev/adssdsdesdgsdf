@@ -219,7 +219,7 @@ export default async function FarmhousePage({
   const hasCoverImage = !!farm.coverImage;
 
   return (
-    <>
+    <div className="w-full overflow-x-hidden">
       {/* JSON-LD */}
       <script
         type="application/ld+json"
@@ -330,7 +330,7 @@ export default async function FarmhousePage({
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
             {/* Left Column — Content */}
-            <div className="lg:col-span-2 space-y-8 sm:space-y-10">
+            <div className="min-w-0 lg:col-span-2 space-y-8 sm:space-y-10">
               {/* About */}
               <section>
                 <h2
@@ -352,14 +352,14 @@ export default async function FarmhousePage({
                 >
                   Amenities &amp; Features
                 </h2>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
+                <div className="grid grid-cols-1 gap-2 xs:grid-cols-2 sm:grid-cols-2 sm:gap-3">
                   {farm.amenities.map((amenity) => (
                     <div
                       key={amenity}
-                      className="flex items-center gap-2.5 rounded-xl border border-amber-800/8 bg-white px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md sm:gap-3 sm:px-4 sm:py-3"
+                      className="flex min-w-0 items-center gap-2.5 rounded-xl border border-amber-800/8 bg-white px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md sm:gap-3 sm:px-4 sm:py-3"
                     >
-                      {getAmenityIcon(amenity)}
-                      <span className="text-xs font-medium text-brown-800 sm:text-sm">
+                      <span className="shrink-0">{getAmenityIcon(amenity)}</span>
+                      <span className="min-w-0 break-words text-xs font-medium text-brown-800 sm:text-sm">
                         {amenity}
                       </span>
                     </div>
@@ -375,7 +375,7 @@ export default async function FarmhousePage({
                 >
                   Location &amp; Directions
                 </h2>
-                <div className="rounded-2xl border border-amber-800/8 bg-white p-4 shadow-sm sm:p-6 md:p-8">
+                <div className="min-w-0 rounded-2xl border border-amber-800/8 bg-white p-4 shadow-sm sm:p-6 md:p-8">
                   {localizedCopy
                     .split("\n\n")
                     .filter(Boolean)
@@ -421,7 +421,7 @@ export default async function FarmhousePage({
             </div>
 
             {/* Right Sidebar — Booking Card */}
-            <div className="lg:col-span-1">
+            <div className="min-w-0 lg:col-span-1">
               <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-6">
                 {/* Price / Contact Card */}
                 <div className="overflow-hidden rounded-2xl border border-amber-800/10 bg-white shadow-lg">
@@ -502,7 +502,7 @@ export default async function FarmhousePage({
                   >
                     Pricing &amp; Availability
                   </h3>
-                  <div className="space-y-3 text-sm text-amber-900/70">
+                  <div className="space-y-3 text-xs text-amber-900/70 sm:text-sm">
                     {farm.pricingEnabled ? (
                       <>
                         <div className="flex justify-between">
@@ -573,6 +573,6 @@ export default async function FarmhousePage({
           </Link>
         </div>
       </section>
-    </>
+    </div>
   );
 }
