@@ -229,7 +229,7 @@ export default async function FarmhousePage({
       />
 
       {/* ── HERO ─────────────────────────────────────── */}
-      <section className="relative min-h-[60vh] flex items-end overflow-hidden bg-brown-950">
+      <section className="relative flex min-h-[45vh] items-end overflow-hidden bg-brown-950 sm:min-h-[55vh] lg:min-h-[60vh]">
         <div className="absolute inset-0">
           {hasCoverImage ? (
             <Image
@@ -250,43 +250,43 @@ export default async function FarmhousePage({
           <div className="absolute inset-0 bg-gradient-to-r from-brown-900/50 to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-12 pt-32 sm:px-6 lg:px-8">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-8 pt-24 sm:px-6 sm:pb-12 sm:pt-32 lg:px-8">
           {/* Breadcrumb */}
           <nav
             aria-label="Breadcrumb"
-            className="mb-6 flex items-center gap-2 text-sm text-cream-100/60"
+            className="mb-4 flex items-center gap-2 text-xs text-cream-100/60 sm:mb-6 sm:text-sm"
           >
             <Link href="/" className="transition-colors hover:text-cream-300">
               Home
             </Link>
             <ChevronRight size={14} />
-            <span className="text-cream-300">{farm.name}</span>
+            <span className="truncate text-cream-300">{farm.name}</span>
           </nav>
 
           {/* Badge */}
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 backdrop-blur-md">
+          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur-md sm:mb-4 sm:gap-2 sm:px-4 sm:py-1.5">
             <div className="flex gap-0.5 text-cream-300">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} size={12} fill="currentColor" />
+                <Star key={i} size={10} fill="currentColor" className="sm:h-3 sm:w-3" />
               ))}
             </div>
             <span className="h-3 w-px bg-white/30" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-white">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-white sm:text-xs">
               Premium Venue
             </span>
           </div>
 
           <h1
-            className="text-4xl font-extrabold leading-tight text-white sm:text-5xl lg:text-6xl"
+            className="text-2xl font-extrabold leading-tight text-white sm:text-4xl md:text-5xl lg:text-6xl"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             {farm.name}
           </h1>
-          <div className="mt-3 flex items-center gap-2 text-cream-100/70">
-            <MapPin size={16} />
-            <span className="text-sm">{farm.location}</span>
+          <div className="mt-2 flex items-center gap-2 text-cream-100/70 sm:mt-3">
+            <MapPin size={14} className="shrink-0 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm">{farm.location}</span>
           </div>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-cream-100/80 sm:text-lg">
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-cream-100/80 sm:mt-4 sm:text-base lg:text-lg">
             {farm.shortDescription}
           </p>
         </div>
@@ -294,31 +294,31 @@ export default async function FarmhousePage({
 
       {/* ── QUICK STATS BAR ──────────────────────────── */}
       <div className="border-b border-amber-800/10 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-6 px-4 py-5 sm:gap-10 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 px-4 py-4 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-6 sm:px-6 sm:py-5 lg:gap-10 lg:px-8">
           <div className="flex items-center gap-2">
-            <Bed size={20} className="text-amber-700" />
-            <span className="text-sm font-semibold text-brown-800">
+            <Bed size={18} className="shrink-0 text-amber-700 sm:h-5 sm:w-5" />
+            <span className="text-xs font-semibold text-brown-800 sm:text-sm">
               {farm.bedrooms} Bedrooms
             </span>
           </div>
           <div className="h-6 w-px bg-amber-800/15 hidden sm:block" />
           <div className="flex items-center gap-2">
-            <Bath size={20} className="text-amber-700" />
-            <span className="text-sm font-semibold text-brown-800">
+            <Bath size={18} className="shrink-0 text-amber-700 sm:h-5 sm:w-5" />
+            <span className="text-xs font-semibold text-brown-800 sm:text-sm">
               {farm.bathrooms} Bathrooms
             </span>
           </div>
           <div className="h-6 w-px bg-amber-800/15 hidden sm:block" />
           <div className="flex items-center gap-2">
-            <Users size={20} className="text-amber-700" />
-            <span className="text-sm font-semibold text-brown-800">
+            <Users size={18} className="shrink-0 text-amber-700 sm:h-5 sm:w-5" />
+            <span className="text-xs font-semibold text-brown-800 sm:text-sm">
               Up to {farm.maxGuests} Guests
             </span>
           </div>
           <div className="h-6 w-px bg-amber-800/15 hidden sm:block" />
           <div className="flex items-center gap-2">
-            <Shield size={20} className="text-amber-700" />
-            <span className="text-sm font-semibold text-brown-800">
+            <Shield size={18} className="shrink-0 text-amber-700 sm:h-5 sm:w-5" />
+            <span className="text-xs font-semibold text-brown-800 sm:text-sm">
               24/7 Security
             </span>
           </div>
@@ -326,15 +326,15 @@ export default async function FarmhousePage({
       </div>
 
       {/* ── MAIN CONTENT ─────────────────────────────── */}
-      <main className="bg-cream-50">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
+      <main className="bg-cream-50 overflow-x-hidden">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
             {/* Left Column — Content */}
-            <div className="lg:col-span-2 space-y-10">
+            <div className="lg:col-span-2 space-y-8 sm:space-y-10">
               {/* About */}
               <section>
                 <h2
-                  className="mb-4 text-2xl font-bold text-brown-800 sm:text-3xl"
+                  className="mb-3 text-xl font-bold text-brown-800 sm:mb-4 sm:text-2xl md:text-3xl"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   About {farm.name}
@@ -347,19 +347,19 @@ export default async function FarmhousePage({
               {/* Amenities */}
               <section>
                 <h2
-                  className="mb-6 text-2xl font-bold text-brown-800 sm:text-3xl"
+                  className="mb-4 text-xl font-bold text-brown-800 sm:mb-6 sm:text-2xl md:text-3xl"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   Amenities &amp; Features
                 </h2>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
                   {farm.amenities.map((amenity) => (
                     <div
                       key={amenity}
-                      className="flex items-center gap-3 rounded-xl border border-amber-800/8 bg-white px-4 py-3 shadow-sm transition-shadow hover:shadow-md"
+                      className="flex items-center gap-2.5 rounded-xl border border-amber-800/8 bg-white px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md sm:gap-3 sm:px-4 sm:py-3"
                     >
                       {getAmenityIcon(amenity)}
-                      <span className="text-sm font-medium text-brown-800">
+                      <span className="text-xs font-medium text-brown-800 sm:text-sm">
                         {amenity}
                       </span>
                     </div>
@@ -370,19 +370,19 @@ export default async function FarmhousePage({
               {/* Localized Copy Block */}
               <section>
                 <h2
-                  className="mb-6 text-2xl font-bold text-brown-800 sm:text-3xl"
+                  className="mb-4 text-xl font-bold text-brown-800 sm:mb-6 sm:text-2xl md:text-3xl"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   Location &amp; Directions
                 </h2>
-                <div className="rounded-2xl border border-amber-800/8 bg-white p-6 shadow-sm sm:p-8">
+                <div className="rounded-2xl border border-amber-800/8 bg-white p-4 shadow-sm sm:p-6 md:p-8">
                   {localizedCopy
                     .split("\n\n")
                     .filter(Boolean)
                     .map((para, i) => (
                       <p
                         key={i}
-                        className="mb-4 text-sm leading-relaxed text-amber-900/75 last:mb-0 sm:text-base"
+                        className="mb-3 text-xs leading-relaxed text-amber-900/75 last:mb-0 sm:mb-4 sm:text-sm md:text-base"
                       >
                         {para}
                       </p>
@@ -394,16 +394,16 @@ export default async function FarmhousePage({
               {hasImages && farm.images.length > 1 && (
                 <section>
                   <h2
-                    className="mb-6 text-2xl font-bold text-brown-800 sm:text-3xl"
+                    className="mb-4 text-xl font-bold text-brown-800 sm:mb-6 sm:text-2xl md:text-3xl"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     Photo Gallery
                   </h2>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
                     {farm.images.map((img, i) => (
                       <div
                         key={i}
-                        className="relative aspect-[4/3] overflow-hidden rounded-xl border border-amber-800/8 shadow-sm"
+                        className="relative aspect-[4/3] overflow-hidden rounded-lg border border-amber-800/8 shadow-sm sm:rounded-xl"
                       >
                         <Image
                           src={img}
@@ -422,22 +422,22 @@ export default async function FarmhousePage({
 
             {/* Right Sidebar — Booking Card */}
             <div className="lg:col-span-1">
-              <div className="sticky top-6 space-y-6">
+              <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-6">
                 {/* Price / Contact Card */}
                 <div className="overflow-hidden rounded-2xl border border-amber-800/10 bg-white shadow-lg">
-                  <div className="bg-gradient-to-r from-amber-700 to-amber-800 px-6 py-5">
+                  <div className="bg-gradient-to-r from-amber-700 to-amber-800 px-4 py-4 sm:px-6 sm:py-5">
                     {farm.pricingEnabled ? (
                       <>
-                        <p className="text-sm font-medium text-cream-100/80">
+                        <p className="text-xs font-medium text-cream-100/80 sm:text-sm">
                           Starting from
                         </p>
                         <p
-                          className="text-3xl font-bold text-white"
+                          className="text-2xl font-bold text-white sm:text-3xl"
                           style={{ fontFamily: "var(--font-heading)" }}
                         >
                           PKR {farm.pricePerNight.toLocaleString()}
                         </p>
-                        <p className="text-sm text-cream-100/60">per night</p>
+                        <p className="text-xs text-cream-100/60 sm:text-sm">per night</p>
                         {farm.weekendSurcharge > 0 && (
                           <p className="mt-1 text-xs text-cream-300">
                             +PKR {farm.weekendSurcharge.toLocaleString()} weekend
@@ -447,29 +447,29 @@ export default async function FarmhousePage({
                       </>
                     ) : (
                       <>
-                        <p className="text-sm font-medium text-cream-100/80">
+                        <p className="text-xs font-medium text-cream-100/80 sm:text-sm">
                           Pricing
                         </p>
                         <p
-                          className="text-2xl font-bold text-white"
+                          className="text-xl font-bold text-white sm:text-2xl"
                           style={{ fontFamily: "var(--font-heading)" }}
                         >
                           Contact for Rates
                         </p>
-                        <p className="mt-1 text-sm text-cream-100/60">
+                        <p className="mt-1 text-xs text-cream-100/60 sm:text-sm">
                           Get a custom quote via WhatsApp
                         </p>
                       </>
                     )}
                   </div>
 
-                  <div className="p-6 space-y-4">
+                  <div className="p-4 space-y-3 sm:p-6 sm:space-y-4">
                     {/* WhatsApp CTA */}
                     <a
                       href={whatsappUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-200 hover:bg-[#20bd5a] hover:shadow-lg active:scale-[0.98]"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 hover:bg-[#20bd5a] hover:shadow-lg active:scale-[0.98] sm:px-6 sm:py-3.5"
                     >
                       <MessageCircle size={20} fill="white" />
                       Book via WhatsApp
@@ -478,7 +478,7 @@ export default async function FarmhousePage({
                     {/* Phone CTA */}
                     <a
                       href="tel:+922134548555"
-                      className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-700/20 px-6 py-3 text-sm font-semibold text-amber-700 transition-all duration-200 hover:border-amber-700 hover:bg-amber-700/5"
+                      className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-700/20 px-4 py-2.5 text-sm font-semibold text-amber-700 transition-all duration-200 hover:border-amber-700 hover:bg-amber-700/5 sm:px-6 sm:py-3"
                     >
                       <Phone size={18} />
                       Call 021-3454 8555
@@ -495,9 +495,9 @@ export default async function FarmhousePage({
                 </div>
 
                 {/* Quick Info */}
-                <div className="rounded-2xl border border-amber-800/10 bg-white p-6 shadow-sm">
+                <div className="rounded-2xl border border-amber-800/10 bg-white p-4 shadow-sm sm:p-6">
                   <h3
-                    className="mb-4 text-lg font-bold text-brown-800"
+                    className="mb-3 text-base font-bold text-brown-800 sm:mb-4 sm:text-lg"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     Pricing &amp; Availability
